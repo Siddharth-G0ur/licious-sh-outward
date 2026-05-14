@@ -1,0 +1,1435 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>SH Outward — Licious Scan App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Lato:wght@400;700;900&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --licious-red:#D11243; --licious-red-deep:#B40E36;
+      --dark-canvas:#252638; --dark-surface-2:#414153;
+      --bg-page:#F8F8F8; --border-card:#E9E9E9; --border-input:#C0C1C3;
+      --fg-primary:#0D0D0E; --fg-strong:#2B2B2E; --fg-subtle:#62666A; --fg-faint:#A0A0A0;
+      --font-display:"Manrope",system-ui,sans-serif;
+      --radius-lg:12px;
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{margin:0;font:400 14px/1.6 var(--font-display);color:#2B2B2E;background:#0f0e1c;-webkit-font-smoothing:antialiased}
+
+    .kit-stage{background:#0f0e1c;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:28px 16px;flex-direction:column;gap:16px}
+    .kit-shell{width:380px;height:760px;background:#000;border-radius:38px;padding:8px;box-shadow:0 24px 80px rgba(0,0,0,.6),inset 0 0 0 1.5px #2a2a36;position:relative;flex-shrink:0}
+    .kit-viewport{width:100%;height:100%;border-radius:32px;overflow:hidden;position:relative;background:#F8F8F8}
+    .header-strip{color:rgba(255,255,255,.78);font:500 12px/1.4 var(--font-display);text-align:center;max-width:540px}
+    .header-strip strong{color:#fff;font-weight:700}
+    .header-strip .small{color:rgba(255,255,255,.45);font-size:11px;margin-top:4px;display:block}
+
+    /* nav strip */
+    .nav{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;padding:8px 12px;background:rgba(255,255,255,.04);border-radius:999px;max-width:720px}
+    .nav button{background:transparent;border:1px solid rgba(255,255,255,.10);color:rgba(255,255,255,.75);padding:7px 11px;border-radius:999px;cursor:pointer;font:600 11px/1 var(--font-display);transition:all .15s;white-space:nowrap}
+    .nav button:hover{color:#fff;border-color:rgba(255,255,255,.25)}
+    .nav button.active{background:#D11243;color:#fff;border-color:#D11243}
+    .nav .group{display:flex;gap:4px;padding:0 4px;border-left:1px solid rgba(255,255,255,.08);align-items:center}
+    .nav .group:first-child{border-left:0;padding-left:0}
+    .nav .group-label{font:700 9px/1 var(--font-display);letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.35);padding:6px 4px}
+
+    /* chrome */
+    .sb{height:28px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font:700 13px/1 var(--font-display);flex-shrink:0}
+    .sb.light{color:#0D0D0E}.sb.dark{color:#fff}
+    .sb .battery{width:24px;height:12px;border-radius:2px;box-shadow:inset 0 0 0 1px currentColor;position:relative}
+    .sb .battery::after{content:"";position:absolute;left:1px;top:1px;bottom:1px;width:16px;background:currentColor;border-radius:1px}
+    .appbar{height:56px;background:#fff;display:flex;align-items:center;padding:0 16px;box-shadow:0 3px 6px rgba(0,0,0,.05);flex-shrink:0}
+    .appbar.dark{background:#252638;box-shadow:none;border-bottom:1px solid rgba(255,255,255,.10)}
+    .appbar .title{font:700 18px/1 var(--font-display);color:#0D0D0E;margin:0 auto}
+    .appbar.dark .title{color:#fff}
+    .icon-btn{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;color:#2B2B2E;background:none;border:0;cursor:pointer}
+    .appbar.dark .icon-btn{color:#fff}
+
+    /* layout */
+    .screen{display:flex;flex-direction:column;height:100%}
+    .body{flex:1;overflow-y:auto;min-height:0}
+    .body.dark{background:#252638}.body.light{background:#F8F8F8}
+    .action{background:#fff;padding:12px 16px 16px;box-shadow:0 -2px 8px rgba(0,0,0,.06);display:flex;gap:12px;flex-shrink:0}
+    .action.dark{background:#252638;box-shadow:none;border-top:1px solid rgba(255,255,255,.10)}
+
+    /* buttons */
+    .btn{border:0;cursor:pointer;font:700 16px/1 var(--font-display);border-radius:12px;padding:0 20px;height:54px;flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background .15s,transform .05s}
+    .btn:active{transform:scale(.99)}
+    .btn-primary{background:#D11243;color:#fff}
+    .btn-primary:active{background:#B40E36}
+    .btn-primary:disabled{background:#F8C4D2;cursor:not-allowed;transform:none}
+    .btn-secondary{background:#fff;color:#2B2B2E;border:1px solid #C0C1C3}
+    .btn-secondary:active{background:#F0F1F2}
+
+    /* cards */
+    .card{background:#fff;border-radius:8px;border:1px solid #E9E9E9;overflow:hidden}
+    .tap-card{border:1px solid #E9E9E9;background:#fff;text-align:left;cursor:pointer;width:100%;display:block;padding:0;border-radius:8px;transition:background .1s}
+    .tap-card:active{background:#F8F8F8}
+    .tap-card:disabled{cursor:default;opacity:.7}
+
+    /* badge */
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:4px;font:700 11px/1.6 var(--font-display)}
+    .badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+    .badge-warn{background:#FFFBD5;color:#EE8511}
+    .badge-info{background:#F0F9FF;color:#1C7ED6}
+    .badge-ok{background:#E9F9EE;color:#0E8B45}
+    .badge-err{background:#FDF3F6;color:#D11243}
+    .badge-grey{background:rgba(15,15,15,.05);color:#2B2B2E}
+    .badge-dark{background:rgba(255,255,255,.10);color:#fff}
+
+    /* field */
+    .field-label{font:600 12px/1.5 var(--font-display);color:#62666A;margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase}
+    .field-box{height:56px;border-radius:12px;background:#fff;border:1px solid #C0C1C3;display:flex;align-items:center;padding:0 16px;font:500 16px/1 var(--font-display);color:#0D0D0E;gap:12px;transition:border .15s}
+    .field-box.placeholder{color:#A0A0A0}.field-box.typed{border-color:#2B2B2E}.field-box.error{border-color:#D11243;background:#FDF3F6}
+    .field-box input{background:transparent;border:0;outline:none;flex:1;font:500 16px/1 var(--font-display);color:#0D0D0E}
+    .field-box input::placeholder{color:#A0A0A0}
+    .field-hint{font:500 12px/1.4 var(--font-display);color:#62666A;margin-top:6px}
+    .field-hint.error{color:#D11243}
+
+    /* modal */
+    .scrim{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:30;display:flex;flex-direction:column;animation:fadein 200ms ease}
+    .scrim.center{justify-content:center;padding:20px}
+    @keyframes fadein{from{opacity:0}to{opacity:1}}
+    .modal-card{background:#fff;border-radius:16px;padding:24px;animation:modalin 200ms ease}
+    @keyframes modalin{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+
+    /* hub chips */
+    .tab-row{background:#fff;display:flex;gap:8px;padding:10px 12px;border-bottom:1px solid #E9E9E9;overflow-x:auto;flex-shrink:0}
+    .tab-row::-webkit-scrollbar{display:none}
+    .tab-chip{background:#fff;border:1px solid #C0C1C3;border-radius:999px;padding:6px 12px;font:700 12px/1 var(--font-display);cursor:pointer;white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;color:#2B2B2E}
+    .tab-chip.active{background:#252638;color:#fff;border-color:#252638}
+    .tab-chip .pill{background:#F0F1F2;color:#62666A;border-radius:999px;padding:1px 7px;font:700 10px/1 var(--font-display)}
+    .tab-chip.active .pill{background:#D11243;color:#fff}
+
+    /* category rail */
+    .cat-rail{width:68px;background:#252638;display:flex;flex-direction:column;padding-top:8px;flex-shrink:0;border-right:1px solid rgba(255,255,255,.06)}
+    .cat-rail .item{background:transparent;border:0;padding:12px 0 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,.55);position:relative;transition:color .15s}
+    .cat-rail .item.active{color:#fff}
+    .cat-rail .item.active::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;background:#D11243;border-radius:0 3px 3px 0}
+    .cat-rail .item .icon-box{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;position:relative}
+    .cat-rail .item.active .icon-box{background:rgba(209,18,67,.18)}
+    .cat-rail .item .badge-count{position:absolute;top:-4px;right:-6px;min-width:18px;height:18px;padding:0 5px;background:#D11243;color:#fff;border-radius:9px;font:700 10px/1 var(--font-display);display:flex;align-items:center;justify-content:center;border:2px solid #252638}
+    .cat-rail .item .label{font:600 9px/1 var(--font-display);letter-spacing:.04em}
+
+    /* progress */
+    .progress{height:6px;background:#F0F1F2;border-radius:3px;overflow:hidden}
+    .progress.thick{height:8px}
+    .progress>div{height:100%;transition:width .4s ease}
+    .progress>.ok{background:#12B75A}
+    .progress>.warn{background:#FFAA01}
+    .progress>.err{background:#D11243}
+    .progress.dark{background:rgba(255,255,255,.12)}
+
+    /* misc */
+    .mono{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-variant-numeric:tabular-nums}
+    .svg-ic{width:20px;height:20px;flex-shrink:0}
+
+    /* scan side button */
+    .scan-side-btn{width:44px;background:#D11243;border:0;border-radius:12px;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;flex-shrink:0;font:700 9px/1.2 var(--font-display);letter-spacing:.06em;text-transform:uppercase;transition:background .1s,transform .05s;padding:0}
+    .scan-side-btn:active{background:#B40E36;transform:scale(.97)}
+    .scan-side-btn svg{width:22px;height:22px}
+  </style>
+</head>
+<body>
+<div class="kit-stage">
+  <div class="header-strip">
+    <svg width="90" height="30" viewBox="0 0 90 30" fill="none" style="vertical-align:middle;margin-right:6px">
+      <text x="2" y="24" font-family="Manrope,sans-serif" font-weight="800" font-size="24" fill="#fff">licious</text>
+      <circle cx="20" cy="5" r="3" fill="#E21E36"/><circle cx="30" cy="5" r="3" fill="#E21E36"/>
+    </svg>
+    <strong>SH Outward App</strong>
+    <span class="small">Login → Hub → SKU list → Scan (side button) → Submit hub → Done · 380×760 HHD</span>
+  </div>
+
+  <div id="root"></div>
+  <div class="nav" id="nav"></div>
+
+  <div class="header-strip" style="color:rgba(255,255,255,.45);font-size:11px">
+    OTP <strong style="color:#fff">0000</strong> · tap SKU → hub → red side <strong style="color:#fff">SCAN</strong> button · <strong style="color:#fff">Submit Hub</strong> saves scans and locks · crown button = final outward submit
+  </div>
+</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+<!-- ══════════════ FIXTURE DATA ══════════════ -->
+<script>
+window.DATA = (function(){
+  const USER = { id:"EMP-2041", name:"Kumar S",
+    superhub:{id:"blr-retail-sh",label:"BLR Retail SH",city:"Bangalore"},
+    role:"PC Ops", canSubmitOutward:true };
+
+  const HUBS = [
+    {id:"aecs",        label:"AECS",        zone:"East"},
+    {id:"gunjur",      label:"Gunjur",      zone:"East"},
+    {id:"hsr",         label:"HSR Layout",  zone:"South"},
+    {id:"whitefield",  label:"Whitefield",  zone:"East"},
+    {id:"indira",      label:"Indiranagar", zone:"Central"},
+    {id:"koramangala", label:"Koramangala", zone:"South"},
+    {id:"jayanagar",   label:"Jayanagar",   zone:"South"},
+  ];
+
+  // All hub scanned values start at 0 so changes are clearly visible from scratch
+  const SKUS = [
+    {id:"sku-ckn-cc", cat:"chicken", name:"Chicken Whole Curry Cut", type:"free", uom:"kg", plan:84.5, activeUsers:2,
+     hubs:[{id:"aecs",plan:24.0},{id:"gunjur",plan:18.5},{id:"hsr",plan:16.0},{id:"whitefield",plan:14.0},{id:"indira",plan:12.0}]},
+    {id:"sku-ckn-br", cat:"chicken", name:"Chicken Breast Boneless", type:"free", uom:"kg", plan:42.0, activeUsers:0,
+     hubs:[{id:"aecs",plan:10.0},{id:"gunjur",plan:8.0},{id:"hsr",plan:12.0},{id:"whitefield",plan:12.0}]},
+    {id:"sku-ckn-liv",cat:"chicken", name:"Chicken Liver 200g", type:"fixed", uom:"units", plan:64, activeUsers:0,
+     hubs:[{id:"aecs",plan:18},{id:"gunjur",plan:14},{id:"hsr",plan:16},{id:"koramangala",plan:16}]},
+    {id:"sku-ckn-wg", cat:"chicken", name:"Chicken Wings", type:"fixed", uom:"units", plan:120, activeUsers:1,
+     hubs:[{id:"aecs",plan:30},{id:"gunjur",plan:24},{id:"hsr",plan:32},{id:"whitefield",plan:34}]},
+    {id:"sku-mtn-cc", cat:"mutton",  name:"Mutton Curry Cut", type:"free", uom:"kg", plan:36.0, activeUsers:0,
+     hubs:[{id:"aecs",plan:10.0},{id:"hsr",plan:12.0},{id:"whitefield",plan:8.0},{id:"indira",plan:6.0}]},
+    {id:"sku-mtn-mc", cat:"mutton",  name:"Mutton Mince", type:"free", uom:"kg", plan:18.0, activeUsers:0,
+     hubs:[{id:"gunjur",plan:8.0},{id:"koramangala",plan:10.0}]},
+    {id:"sku-mtn-by", cat:"mutton",  name:"Mutton Biryani Cut", type:"free", uom:"kg", plan:22.0, activeUsers:1,
+     hubs:[{id:"aecs",plan:6.0},{id:"hsr",plan:8.0},{id:"whitefield",plan:8.0}]},
+    {id:"sku-mtn-keb",cat:"mutton",  name:"Mutton Kebab Mix 250g", type:"fixed", uom:"units", plan:40, activeUsers:0,
+     hubs:[{id:"aecs",plan:12},{id:"hsr",plan:14},{id:"indira",plan:14}]},
+    {id:"sku-fs-kf",  cat:"fs", name:"King Fish (Rui)", type:"free", uom:"kg", plan:28.0, activeUsers:0,
+     hubs:[{id:"aecs",plan:8.0},{id:"gunjur",plan:6.0},{id:"hsr",plan:8.0},{id:"whitefield",plan:6.0}]},
+    {id:"sku-fs-prw", cat:"fs", name:"Prawns Medium 21-25", type:"fixed", uom:"units", plan:96, activeUsers:2,
+     hubs:[{id:"aecs",plan:24},{id:"gunjur",plan:20},{id:"hsr",plan:26},{id:"indira",plan:26}]},
+    {id:"sku-fs-pom", cat:"fs", name:"Pomfret Whole", type:"fixed", uom:"units", plan:36, activeUsers:0,
+     hubs:[{id:"aecs",plan:10},{id:"hsr",plan:14},{id:"whitefield",plan:12}]},
+    {id:"sku-fs-basa",cat:"fs", name:"Basa Fillet 250g", type:"fixed", uom:"units", plan:48, activeUsers:0,
+     hubs:[{id:"aecs",plan:12},{id:"gunjur",plan:12},{id:"hsr",plan:12},{id:"whitefield",plan:12}]},
+  ];
+
+  const HUB_LABEL = Object.fromEntries(HUBS.map(h=>[h.id,h.label]));
+  const SKU_BY_ID = Object.fromEntries(SKUS.map(s=>[s.id,s]));
+  return {USER,HUBS,SKUS,HUB_LABEL,SKU_BY_ID};
+})();
+</script>
+
+<!-- ══════════════ APP ══════════════ -->
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback} = React;
+
+/* ─────────────────────────────────────────
+   LIVE-DATA HELPERS
+   liveScans: { 'skuId:hubId': { scanned:number, submitted:bool } }
+   These functions are the single source of truth for anything displayed.
+───────────────────────────────────────── */
+function hubKey(skuId,hubId){ return `${skuId}:${hubId}`; }
+
+function liveHubScanned(live, skuId, hubId){
+  const k = hubKey(skuId,hubId);
+  return live[k]?.scanned ?? 0;
+}
+
+function liveSkuScanned(live, skuId){
+  const sku = DATA.SKU_BY_ID[skuId];
+  if(!sku) return 0;
+  return +sku.hubs.reduce((a,h)=>a+liveHubScanned(live,skuId,h.id),0).toFixed(2);
+}
+
+function isSubmitted(live, skuId, hubId){
+  return !!live[hubKey(skuId,hubId)]?.submitted;
+}
+
+// Derive hub status from live data
+function hubStatus(live, skuId, hubId){
+  if(isSubmitted(live,skuId,hubId)) return "submitted";
+  const sc = liveHubScanned(live,skuId,hubId);
+  const pl = DATA.SKU_BY_ID[skuId]?.hubs?.find(h=>h.id===hubId)?.plan ?? 0;
+  if(sc >= pl && pl > 0) return "complete";
+  if(sc > 0) return "progress";
+  return "pending";
+}
+
+function skuStatus(live, skuId){
+  const sku = DATA.SKU_BY_ID[skuId];
+  const sc  = liveSkuScanned(live,skuId);
+  if(sc >= sku.plan && sku.plan > 0) return "complete";
+  if(sc > 0) return "progress";
+  return "pending";
+}
+
+/* ─────────────────────────────────────────
+   ICONS
+───────────────────────────────────────── */
+const Sv=(p)=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="svg-ic" {...p}/>;
+const IBack   =()=><Sv><path d="m15 18-6-6 6-6"/></Sv>;
+const IChev   =(p)=><Sv {...p}><path d="m9 18 6-6-6-6"/></Sv>;
+const IMore   =()=><svg viewBox="0 0 24 24" fill="currentColor" className="svg-ic"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>;
+const IClose  =(p)=><Sv {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></Sv>;
+const ICheck  =(p)=><Sv {...p}><path d="M20 6 9 17l-5-5"/></Sv>;
+const IScan   =(p)=><Sv {...p}><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></Sv>;
+const IAlert  =(p)=><Sv {...p}><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></Sv>;
+const IUsers  =(p)=><Sv {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></Sv>;
+const IWeight =(p)=><Sv {...p}><circle cx="12" cy="12" r="9"/><path d="M9 10c0-1.5 1.5-3 3-3s3 1.5 3 3"/><path d="M9.5 16h5"/></Sv>;
+const ICount  =(p)=><Sv {...p}><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 8v8M15 8v8M5 12h14"/></Sv>;
+const IClock  =(p)=><Sv {...p}><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></Sv>;
+const ILogout =(p)=><Sv {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></Sv>;
+const IPhone  =(p)=><Sv {...p}><rect x="5" y="2" width="14" height="20" rx="3"/><line x1="12" y1="18" x2="12.01" y2="18"/></Sv>;
+const IRefresh=(p)=><Sv {...p}><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></Sv>;
+const ICrown  =(p)=><Sv {...p}><path d="m2 4 5 10 5-7 5 7 5-10"/><path d="M3 15h18"/></Sv>;
+const ILock   =(p)=><Sv {...p}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></Sv>;
+const IBarChart=(p)=><Sv {...p}><rect x="18" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="2" y="13" width="4" height="8"/></Sv>;
+
+const ICatAll    =(p)=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="svg-ic" {...p}><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>;
+const ICatChicken=(p)=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="svg-ic" {...p}><path d="M13.5 4.5a4 4 0 0 0-4 4c-2.4.9-4.2 2.7-4.2 5.2 0 2.6 2.1 4.3 4.7 4.3 1.5 0 2.5-.5 3-1l1.4 1.4 2.5-2.5-1.4-1.4c.5-.5 1-1.5 1-3 0-1.8-1.3-3.3-3.1-3.8.5-1 1.4-1.9 2.3-2.4"/><circle cx="12" cy="7" r=".8" fill="currentColor" stroke="none"/></svg>;
+const ICatMutton =(p)=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="svg-ic" {...p}><path d="M5 12c0-4 3-7 7-7s7 3 7 7-3 7-7 7c-1.5 0-2.5-.5-3-1l-2 2 2-3-1-1c-1-1-3-2-3-4z"/><circle cx="14" cy="10" r="1" fill="currentColor" stroke="none"/></svg>;
+const ICatFish   =(p)=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="svg-ic" {...p}><path d="M2 12c2-3 5-5 9-5s7 2 9 5c-2 3-5 5-9 5s-7-2-9-5z"/><path d="M20 12l3-3v6l-3-3z"/><circle cx="14" cy="11" r=".7" fill="currentColor" stroke="none"/></svg>;
+
+/* ─────────────────────────────────────────
+   BASE COMPONENTS
+───────────────────────────────────────── */
+function StatusBar({theme="light"}){
+  return(
+    <div className={`sb ${theme}`}>
+      <span>9:41</span>
+      <div style={{display:"flex",alignItems:"center",gap:6}}>
+        <svg width="16" height="11" viewBox="0 0 24 16" fill="currentColor"><rect x="1" y="11" width="3" height="4" rx="1"/><rect x="6" y="8" width="3" height="7" rx="1"/><rect x="11" y="5" width="3" height="10" rx="1"/><rect x="16" y="2" width="3" height="13" rx="1"/></svg>
+        <svg width="13" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 7c3.3 0 6.3 1.3 8.6 3.3l1.4-1.4C19.3 6.4 15.8 5 12 5S4.7 6.4 2 8.9l1.4 1.4C5.7 8.3 8.7 7 12 7zm0 4c2.2 0 4.2.9 5.7 2.3l1.4-1.4C17.2 10.1 14.7 9 12 9s-5.2 1.1-7.1 2.9l1.4 1.4C7.8 11.9 9.8 11 12 11z"/></svg>
+        <div className="battery"/>
+      </div>
+    </div>
+  );
+}
+
+function AppBar({title,theme="light",onBack,right,subtitle}){
+  return(
+    <div className={`appbar${theme==="dark"?" dark":""}`}>
+      {onBack&&<button className="icon-btn" onClick={onBack}><IBack/></button>}
+      <div style={{margin:"0 auto",display:"flex",flexDirection:"column",alignItems:"center",gap:1}}>
+        <div className="title" style={{margin:0}}>{title}</div>
+        {subtitle&&<div style={{font:"500 11px/1 var(--font-display)",color:theme==="dark"?"rgba(255,255,255,.6)":"#62666A"}}>{subtitle}</div>}
+      </div>
+      {right??<button className="icon-btn"><IMore/></button>}
+    </div>
+  );
+}
+
+function Badge({kind="warn",dot=false,children}){
+  return <span className={`badge badge-${kind}`}>{dot&&<span className="dot"/>}{children}</span>;
+}
+
+function StatusFlag({status}){
+  const MAP={
+    pending:  {kind:"grey",dot:false,label:"Pending"},
+    progress: {kind:"warn",dot:true, label:"In Progress"},
+    complete: {kind:"ok",  dot:false,label:"Complete"},
+    submitted:{kind:"info",dot:false,label:"Submitted"},
+  };
+  const m=MAP[status]||MAP.pending;
+  return <Badge kind={m.kind} dot={m.dot}>{m.label}</Badge>;
+}
+
+function Field({label,value,onChange,placeholder,type="text",inputMode,autoFocus,prefix}){
+  const st=!value?"placeholder":"typed";
+  return(
+    <div>
+      {label&&<div className="field-label">{label}</div>}
+      <div className={`field-box ${st}`}>
+        {prefix}
+        <input type={type} inputMode={inputMode} value={value||""} onChange={e=>onChange&&onChange(e.target.value)} placeholder={placeholder} autoFocus={autoFocus}/>
+      </div>
+    </div>
+  );
+}
+
+function Banner({kind="ok",title,body}){
+  const M={
+    ok:  {bg:"#F6FDF7",bd:"#1C9553",fg:"#0E8B45",icBg:"#12B75A",ic:<ICheck/>},
+    warn:{bg:"#FFFEEC",bd:"#FFAA01",fg:"#EE8511",icBg:"#FFAA01",ic:<IAlert/>},
+    err: {bg:"#FDF3F6",bd:"#D11243",fg:"#D11243",icBg:"#D11243",ic:<IClose/>},
+    info:{bg:"#F0F9FF",bd:"#339AF0",fg:"#1C7ED6",icBg:"#339AF0",ic:<IAlert/>},
+  };
+  const m=M[kind];
+  return(
+    <div style={{background:m.bg,border:`1px solid ${m.bd}`,borderRadius:12,padding:"12px 14px",margin:"8px 0",display:"flex",alignItems:"center",gap:12,boxShadow:"4px 2px 11px rgba(0,0,0,.10)"}}>
+      <div style={{width:32,height:32,borderRadius:"50%",flexShrink:0,background:m.icBg,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}>{m.ic}</div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{font:"700 14px/1.3 var(--font-display)",color:m.fg}}>{title}</div>
+        {body&&<div style={{font:"500 12px/1.4 var(--font-display)",color:"#62666A"}}>{body}</div>}
+      </div>
+    </div>
+  );
+}
+
+function TypeTag({type}){
+  return type==="free"
+    ? <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 8px",borderRadius:999,background:"#F0F9FF",color:"#1C7ED6",font:"700 10px/1 var(--font-display)"}}><IWeight style={{width:11,height:11}}/>Free wt</span>
+    : <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 8px",borderRadius:999,background:"#FFFBF0",color:"#9A6313",font:"700 10px/1 var(--font-display)"}}><ICount style={{width:11,height:11}}/>Fixed wt</span>;
+}
+
+function ConcurrencyPill({count}){
+  if(!count) return null;
+  return <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 8px",borderRadius:999,background:"rgba(51,154,240,.12)",color:"#1C7ED6",font:"700 10px/1 var(--font-display)"}}><IUsers style={{width:11,height:11}}/>{count} scanning</span>;
+}
+
+function CategoryRail({active,onChange,counts}){
+  const items=[
+    {id:"all",    label:"All",   Icon:ICatAll,    count:counts.all},
+    {id:"chicken",label:"Chk",   Icon:ICatChicken,count:counts.chicken},
+    {id:"mutton", label:"Mtn",   Icon:ICatMutton, count:counts.mutton},
+    {id:"fs",     label:"F&S",   Icon:ICatFish,   count:counts.fs},
+  ];
+  return(
+    <div className="cat-rail">
+      {items.map(it=>{
+        const on=active===it.id;
+        return(
+          <button key={it.id} className={`item${on?" active":""}`} onClick={()=>onChange(it.id)}>
+            <div className="icon-box">
+              <it.Icon style={{width:24,height:24}}/>
+              {it.count>0&&<span className="badge-count">{it.count}</span>}
+            </div>
+            <span className="label">{it.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function HubChips({hubs,active,onChange,counts}){
+  return(
+    <div className="tab-row">
+      {hubs.map(h=>{
+        const cnt=counts[h.id]??0;
+        const on=active===h.id;
+        return(
+          <button key={h.id} onClick={()=>onChange(h.id)} className={`tab-chip${on?" active":""}`}>
+            {h.label}
+            {cnt>0&&<span className="pill">{cnt}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   AUTH SCREENS
+───────────────────────────────────────── */
+function LiciousMark({dark=false}){
+  const fill=dark?"#fff":"#0D0D0E";
+  return(
+    <svg width="120" height="40" viewBox="0 0 120 40" fill="none" style={{display:"block"}}>
+      <text x="4" y="32" fontFamily="Manrope,sans-serif" fontWeight="800" fontSize="30" fill={fill} letterSpacing="-0.5">licious</text>
+      <circle cx="22" cy="8" r="3.2" fill="#E21E36"/><circle cx="34" cy="8" r="3.2" fill="#E21E36"/>
+    </svg>
+  );
+}
+
+function LoginScreen({go,setUser}){
+  const [empId,setEmpId]=useState("");
+  return(
+    <div className="screen">
+      <StatusBar theme="light"/>
+      <div className="body light" style={{padding:"0 24px",display:"flex",flexDirection:"column",overflowY:"auto"}}>
+        <div style={{textAlign:"center",paddingTop:40,paddingBottom:20}}><LiciousMark/>
+          <div style={{font:"500 11px/1 var(--font-display)",color:"#62666A",marginTop:8,letterSpacing:".16em",textTransform:"uppercase"}}>SH Outward</div>
+        </div>
+        <div style={{font:"800 26px/1.2 var(--font-display)",color:"#0D0D0E"}}>Welcome back</div>
+        <div style={{font:"500 14px/1.5 var(--font-display)",color:"#62666A",marginTop:6}}>Sign in with your employee ID to start scanning.</div>
+        <div style={{marginTop:28}}><Field label="Employee ID" value={empId} onChange={setEmpId} placeholder="EMP-2041" inputMode="text" autoFocus prefix={<IPhone style={{color:"#62666A"}}/>}/></div>
+        <div style={{flex:1,minHeight:16}}/>
+        <div style={{marginTop:12,padding:14,background:"#F0F9FF",borderRadius:10,font:"500 12px/1.5 var(--font-display)",color:"#1C7ED6",marginBottom:8}}>OTP will be sent to your registered phone ending <strong>**41</strong>.</div>
+      </div>
+      <div className="action">
+        <button className="btn btn-primary" disabled={empId.length<4} onClick={()=>{setUser({empId});go("otp");}}>Send OTP</button>
+      </div>
+    </div>
+  );
+}
+
+function OTPScreen({go,setUser,user}){
+  const [digits,setDigits]=useState(["","","",""]);
+  const refs=[useRef(),useRef(),useRef(),useRef()];
+  const ready=digits.join("").length===4;
+  useEffect(()=>{refs[0].current?.focus();},[]);
+  function set(i,v){
+    v=v.replace(/\D/g,"").slice(0,1);
+    const n=[...digits];n[i]=v;setDigits(n);
+    if(v&&i<3)refs[i+1].current?.focus();
+  }
+  return(
+    <div className="screen">
+      <StatusBar theme="light"/>
+      <AppBar title="Verify OTP" onBack={()=>go("login")} right={<span style={{width:32}}/>}/>
+      <div className="body light" style={{padding:"24px",display:"flex",flexDirection:"column",overflowY:"auto"}}>
+        <div style={{font:"800 20px/1.3 var(--font-display)",color:"#0D0D0E"}}>Enter verification code</div>
+        <div style={{font:"500 13px/1.5 var(--font-display)",color:"#62666A",marginTop:4}}>Sent to <strong style={{color:"#2B2B2E"}}>+91 98••••••41</strong></div>
+        <div style={{marginTop:24,display:"flex",gap:10}}>
+          {digits.map((d,i)=>(
+            <input key={i} ref={refs[i]} value={d} maxLength={1} inputMode="numeric"
+              onChange={e=>set(i,e.target.value)}
+              onKeyDown={e=>{if(e.key==="Backspace"&&!d&&i>0)refs[i-1].current?.focus();}}
+              style={{flex:1,minWidth:0,height:52,borderRadius:12,border:`1px solid ${d?"#2B2B2E":"#C0C1C3"}`,textAlign:"center",font:"800 22px/1 var(--font-display)",color:"#0D0D0E",outline:"none",background:"#fff"}}/>
+          ))}
+        </div>
+        <div style={{marginTop:16,font:"500 13px/1.4 var(--font-display)",color:"#62666A",display:"flex",justifyContent:"space-between"}}>
+          <span>Didn't get it?</span>
+          <button style={{background:"none",border:0,color:"#1C7ED6",font:"700 13px/1 var(--font-display)",cursor:"pointer"}}>Resend in 0:24</button>
+        </div>
+        <div style={{flex:1,minHeight:12}}/>
+        <div style={{padding:12,background:"#F8F8F8",borderRadius:10,font:"500 12px/1.5 var(--font-display)",color:"#62666A"}}>
+          Demo: use OTP <strong style={{color:"#2B2B2E"}}>0000</strong> to sign in.
+        </div>
+      </div>
+      <div className="action">
+        <button className="btn btn-primary" disabled={!ready} onClick={()=>{setUser({...user,loggedIn:true,...DATA.USER});go("home");}}>Sign in</button>
+      </div>
+    </div>
+  );
+}
+
+function HubIdentityScreen({go}){
+  return(
+    <div className="screen">
+      <div className="body" style={{background:"linear-gradient(180deg,#06045B 0%,#252638 100%)",display:"flex",flexDirection:"column",padding:"0 24px"}}>
+        <div style={{paddingTop:56}}>
+          <div style={{background:"rgba(255,255,255,.08)",padding:"5px 12px",borderRadius:999,display:"inline-block",font:"700 10px/1 var(--font-display)",color:"#fff",letterSpacing:".14em"}}>YOU'RE SIGNED IN AT</div>
+          <div style={{font:"800 30px/1.2 var(--font-display)",color:"#fff",marginTop:12}}>BLR Retail SH</div>
+          <div style={{font:"500 14px/1.4 var(--font-display)",color:"rgba(255,255,255,.7)",marginTop:6}}>Bangalore · Chiller Room 2 · Shift A</div>
+        </div>
+        <div style={{marginTop:32,background:"rgba(255,255,255,.06)",borderRadius:16,padding:16,color:"#fff"}}>
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <div style={{width:44,height:44,borderRadius:"50%",background:"#D11243",display:"flex",alignItems:"center",justifyContent:"center",font:"700 16px/1 var(--font-display)"}}>K</div>
+            <div>
+              <div style={{font:"700 16px/1 var(--font-display)"}}>{DATA.USER.name}</div>
+              <div style={{font:"500 12px/1.4 var(--font-display)",color:"rgba(255,255,255,.6)",marginTop:2}}>{DATA.USER.role} · {DATA.USER.id}</div>
+            </div>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginTop:16,paddingTop:16,borderTop:"1px solid rgba(255,255,255,.10)"}}>
+            {[["Today's outward","14 May 2026"],["SKUs to scan",DATA.SKUS.length]].map(([l,v])=>(
+              <div key={l}><div style={{font:"500 10px/1 var(--font-display)",color:"rgba(255,255,255,.5)",letterSpacing:".08em",textTransform:"uppercase"}}>{l}</div>
+              <div style={{font:"700 18px/1 var(--font-display)",marginTop:4}}>{v}</div></div>
+            ))}
+          </div>
+        </div>
+        <div style={{flex:1}}/>
+        <button onClick={()=>go("home")} style={{background:"#D11243",color:"#fff",border:0,borderRadius:12,padding:"16px 20px",font:"700 16px/1 var(--font-display)",cursor:"pointer",marginBottom:32,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+          Continue to scanning <IChev style={{width:18,height:18}}/>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   HOME SCREEN
+───────────────────────────────────────── */
+function HomeScreen({go,state,setState,live}){
+  const cat=state.cat||"all";
+  const hub=state.hub||"all";
+  const [showSummary,setShowSummary]=React.useState(false);
+
+  // Pending = at least one hub not submitted and scanned < plan
+  function skuPending(sku){
+    return sku.hubs.some(h=>!isSubmitted(live,sku.id,h.id)&&liveHubScanned(live,sku.id,h.id)<h.plan);
+  }
+  const counts={
+    all:    DATA.SKUS.filter(s=>skuPending(s)).length,
+    chicken:DATA.SKUS.filter(s=>s.cat==="chicken"&&skuPending(s)).length,
+    mutton: DATA.SKUS.filter(s=>s.cat==="mutton" &&skuPending(s)).length,
+    fs:     DATA.SKUS.filter(s=>s.cat==="fs"     &&skuPending(s)).length,
+  };
+
+  const hubsList=[{id:"all",label:"All hubs"},...DATA.HUBS];
+  const hubCounts={all:counts.all};
+  DATA.HUBS.forEach(h=>{
+    hubCounts[h.id]=DATA.SKUS.filter(s=>s.hubs.some(hh=>hh.id===h.id&&!isSubmitted(live,s.id,h.id)&&liveHubScanned(live,s.id,h.id)<hh.plan)).length;
+  });
+
+  const skus=DATA.SKUS.filter(s=>{
+    if(cat!=="all"&&s.cat!==cat)return false;
+    if(hub!=="all"&&!s.hubs.some(hh=>hh.id===hub&&hh.plan>0))return false;
+    return true;
+  });
+
+  const totalPlan   =DATA.SKUS.reduce((a,s)=>a+s.plan,0);
+  const totalScanned=DATA.SKUS.reduce((a,s)=>a+liveSkuScanned(live,s.id),0);
+  const overallPct  =totalPlan===0?0:Math.round((totalScanned/totalPlan)*100);
+
+  // All hubs fully submitted?
+  const allDone=DATA.HUBS.every(h=>DATA.SKUS.filter(s=>s.hubs.some(hh=>hh.id===h.id&&hh.plan>0)).every(s=>isSubmitted(live,s.id,h.id)));
+
+  return(
+    <div className="screen">
+      <StatusBar theme="light"/>
+      {/* header */}
+      <div style={{background:"#fff",padding:"8px 16px",display:"flex",alignItems:"center",gap:10,boxShadow:"0 3px 6px rgba(0,0,0,.05)",flexShrink:0}}>
+        <button onClick={()=>go("hubIdentity")} style={{background:"none",border:0,padding:0,cursor:"pointer",display:"flex",alignItems:"center",gap:10}}>
+          <div style={{width:36,height:36,borderRadius:"50%",background:"#252638",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",font:"700 14px/1 var(--font-display)",flexShrink:0}}>K</div>
+          <div style={{textAlign:"left"}}>
+            <div style={{font:"700 14px/1 var(--font-display)",color:"#0D0D0E"}}>BLR Retail SH</div>
+            <div style={{font:"500 11px/1.3 var(--font-display)",color:"#62666A",marginTop:2}}>Kumar · Shift A · 14 May</div>
+          </div>
+        </button>
+        <div style={{flex:1}}/>
+        {DATA.USER.canSubmitOutward&&(
+          <button onClick={()=>go("outwardSubmit")} className="icon-btn" style={{color:"#D11243"}} title="Submit Outward"><ICrown/></button>
+        )}
+        <button onClick={()=>setShowSummary(true)} className="icon-btn" style={{color:"#62666A"}} title="Summary"><IBarChart/></button>
+        <button onClick={()=>go("login")} className="icon-btn" style={{color:"#62666A"}}><ILogout/></button>
+      </div>
+
+      {/* summary card */}
+      <div style={{padding:"12px 16px 0",flexShrink:0,background:"#F8F8F8"}}>
+        <div style={{background:"linear-gradient(135deg,#252638 0%,#414153 100%)",color:"#fff",borderRadius:12,padding:16}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+            <div>
+              <div style={{font:"500 10px/1 var(--font-display)",color:"rgba(255,255,255,.5)",letterSpacing:".08em",textTransform:"uppercase"}}>SH OUTWARD · 14 MAY</div>
+              <div style={{font:"800 24px/1 var(--font-display)",marginTop:6}}>{overallPct}%<span style={{font:"500 12px/1 var(--font-display)",color:"rgba(255,255,255,.5)",marginLeft:6}}>scanned</span></div>
+            </div>
+            <Badge kind={allDone?"ok":"dark"}>{allDone?"All Done":"In Progress"}</Badge>
+          </div>
+          <div className="progress dark" style={{marginTop:12}}><div className="ok" style={{width:`${overallPct}%`}}/></div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginTop:14,paddingTop:14,borderTop:"1px solid rgba(255,255,255,.10)"}}>
+            {[["SKUs",DATA.SKUS.length],["Hubs",DATA.HUBS.length],["Pending",counts.all]].map(([k,v,c])=>(
+              <div key={k}><div style={{font:"500 9px/1 var(--font-display)",color:"rgba(255,255,255,.45)",letterSpacing:".08em",textTransform:"uppercase"}}>{k}</div>
+              <div style={{font:"700 16px/1 var(--font-display)",marginTop:5,color:k==="Pending"&&v>0?"#FFAA01":"#fff"}}>{v}</div></div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* hub chips */}
+      <HubChips hubs={hubsList} active={hub} onChange={id=>setState({...state,hub:id})} counts={hubCounts}/>
+
+      {/* sidebar + list */}
+      <div style={{flex:1,display:"flex",minHeight:0}}>
+        <CategoryRail active={cat} onChange={id=>setState({...state,cat:id})} counts={counts}/>
+        <div className="body light" style={{padding:"12px",overflowY:"auto",flex:1}}>
+          <div style={{font:"700 11px/1 var(--font-display)",color:"#62666A",letterSpacing:".08em",textTransform:"uppercase",marginBottom:10,padding:"0 4px"}}>
+            {skus.length} SKU{skus.length!==1?"s":""}
+            {hub!=="all"?` · ${DATA.HUB_LABEL[hub]}`:""}
+          </div>
+          {skus.length===0&&<div style={{padding:"40px 16px",textAlign:"center",font:"500 13px/1.4 var(--font-display)",color:"#62666A"}}>No SKUs match.</div>}
+          {skus.map(sku=>{
+            const sc    =liveSkuScanned(live,sku.id);
+            const status=skuStatus(live,sku.id);
+            const over  =sc>sku.plan;
+            return(
+              <button key={sku.id} className="tap-card" onClick={()=>{
+                const ns={...state,sku:sku.id};
+                setState(ns);
+                // If a specific hub is selected, skip the hub-list screen and scan directly
+                if(hub!=="all"&&sku.hubs.some(h=>h.id===hub)){
+                  go(sku.type==="free"?"scanFree":"scanFixed");
+                }else{
+                  go("skuDetail");
+                }
+              }} style={{marginBottom:10,padding:"12px 14px"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:4}}>
+                      <TypeTag type={sku.type}/>
+                      {sku.activeUsers>0&&<ConcurrencyPill count={sku.activeUsers}/>}
+                    </div>
+                    <div style={{font:"700 14px/1.3 var(--font-display)",color:"#0D0D0E"}}>{sku.name}</div>
+                  </div>
+                  <StatusFlag status={status}/>
+                </div>
+                <div style={{display:"flex",alignItems:"baseline",gap:6,marginTop:10}}>
+                  <span style={{font:"700 18px/1 var(--font-display)",color:over?"#D11243":"#0D0D0E"}}>{sku.uom==="kg"?sc.toFixed(1):sc}</span>
+                  <span style={{font:"500 12px/1 var(--font-display)",color:"#62666A"}}>/ {sku.plan} {sku.uom}</span>
+                  {over&&<span style={{font:"700 10px/1 var(--font-display)",color:"#D11243",marginLeft:"auto"}}>OVER PLAN</span>}
+                </div>
+                <div className="progress" style={{marginTop:8}}>
+                  <div className={over?"err":status==="complete"||status==="submitted"?"ok":"warn"} style={{width:`${Math.min(100,(sc/sku.plan)*100)}%`}}/>
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:8}}>
+                  <span style={{font:"500 11px/1 var(--font-display)",color:"#62666A"}}>{sku.hubs.length} destination hubs</span>
+                  <IChev style={{width:14,height:14,color:"#62666A"}}/>
+                </div>
+              </button>
+            );
+          })}
+          <div style={{height:12}}/>
+        </div>
+      </div>
+
+      <div className="action" style={{justifyContent:"center"}}>
+        {hub==="all"
+          ?<button className="btn btn-primary" style={{background:"#62666A",opacity:.85}} onClick={()=>go("outwardSubmit")}>Review Outward</button>
+          :<button className="btn btn-primary" onClick={()=>go("hubSubmit")}>Submit {DATA.HUB_LABEL[hub]}</button>
+        }
+      </div>
+
+      {/* ── Summary overlay ── */}
+      {showSummary&&(
+        <div style={{position:"absolute",inset:0,zIndex:50,display:"flex",flexDirection:"column"}}>
+          {/* backdrop */}
+          <div onClick={()=>setShowSummary(false)} style={{flex:1,background:"rgba(0,0,0,.35)"}}/>
+          {/* sheet */}
+          <div style={{background:"#fff",borderRadius:"16px 16px 0 0",boxShadow:"0 -2px 16px rgba(0,0,0,.18)",display:"flex",flexDirection:"column",maxHeight:"80%"}}>
+            <div style={{padding:"14px 16px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #E9E9E9",flexShrink:0}}>
+              <div style={{font:"700 16px/1 var(--font-display)",color:"#0D0D0E"}}>Progress Summary</div>
+              <button onClick={()=>setShowSummary(false)} className="icon-btn" style={{color:"#62666A"}}><IClose/></button>
+            </div>
+            <div style={{overflowY:"auto",padding:"12px 16px 24px"}}>
+
+              {/* SKU level */}
+              <div style={{font:"700 10px/1 var(--font-display)",color:"#62666A",letterSpacing:".08em",textTransform:"uppercase",marginBottom:8}}>By SKU</div>
+              {DATA.SKUS.map(sku=>{
+                const sc=liveSkuScanned(live,sku.id);
+                const pct=sku.plan===0?0:Math.min(100,Math.round((sc/sku.plan)*100));
+                const st=skuStatus(live,sku.id);
+                const subCount=sku.hubs.filter(h=>isSubmitted(live,sku.id,h.id)).length;
+                return(
+                  <div key={sku.id} style={{marginBottom:10,padding:"10px 12px",background:"#F8F8F8",borderRadius:8}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                      <div style={{font:"600 13px/1.2 var(--font-display)",color:"#0D0D0E",flex:1,minWidth:0,marginRight:8}}>{sku.name}</div>
+                      <StatusFlag status={st}/>
+                    </div>
+                    <div style={{display:"flex",alignItems:"baseline",gap:4,marginBottom:6}}>
+                      <span style={{font:"700 15px/1 var(--font-display)",color:sc>sku.plan?"#D11243":"#0D0D0E"}}>{sku.uom==="kg"?sc.toFixed(1):sc}</span>
+                      <span style={{font:"400 12px/1 var(--font-display)",color:"#62666A"}}>/ {sku.plan} {sku.uom}</span>
+                      <span style={{font:"500 11px/1 var(--font-display)",color:"#62666A",marginLeft:"auto"}}>{subCount}/{sku.hubs.length} hubs submitted</span>
+                    </div>
+                    <div style={{height:4,background:"#E9E9E9",borderRadius:999}}>
+                      <div style={{height:"100%",borderRadius:999,background:sc>sku.plan?"#D11243":st==="submitted"||st==="complete"?"#12B75A":"#FFAA01",width:`${pct}%`}}/>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Store level */}
+              <div style={{font:"700 10px/1 var(--font-display)",color:"#62666A",letterSpacing:".08em",textTransform:"uppercase",margin:"16px 0 8px"}}>By Store / Hub</div>
+              {DATA.HUBS.map(h=>{
+                const skusForHub=DATA.SKUS.filter(s=>s.hubs.some(hh=>hh.id===h.id&&hh.plan>0));
+                const planTotal =skusForHub.reduce((a,s)=>{
+                  const hh=s.hubs.find(x=>x.id===h.id);
+                  return a+(hh?hh.plan:0);
+                },0);
+                const scTotal   =skusForHub.reduce((a,s)=>a+liveHubScanned(live,s.id,h.id),0);
+                const submittedN=skusForHub.filter(s=>isSubmitted(live,s.id,h.id)).length;
+                const allSub    =submittedN===skusForHub.length&&skusForHub.length>0;
+                const pct       =planTotal===0?0:Math.min(100,Math.round((scTotal/planTotal)*100));
+                const uomLabel  =skusForHub.some(s=>s.uom==="kg")?"kg":"u";
+                return(
+                  <div key={h.id} style={{marginBottom:10,padding:"10px 12px",background:"#F8F8F8",borderRadius:8}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                      <div style={{font:"700 13px/1 var(--font-display)",color:"#0D0D0E"}}>{h.label}</div>
+                      <div style={{font:"600 11px/1 var(--font-display)",color:allSub?"#12B75A":"#FFAA01",background:allSub?"#F6FDF7":"#FFFEEC",padding:"2px 7px",borderRadius:999}}>
+                        {allSub?"All submitted":`${submittedN}/${skusForHub.length} SKUs`}
+                      </div>
+                    </div>
+                    <div style={{display:"flex",alignItems:"baseline",gap:4,marginBottom:6}}>
+                      <span style={{font:"700 15px/1 var(--font-display)",color:"#0D0D0E"}}>{uomLabel==="kg"?scTotal.toFixed(1):scTotal}</span>
+                      <span style={{font:"400 12px/1 var(--font-display)",color:"#62666A"}}>/ {planTotal} {uomLabel}</span>
+                      <span style={{font:"500 11px/1 var(--font-display)",color:"#62666A",marginLeft:"auto"}}>{pct}%</span>
+                    </div>
+                    <div style={{height:4,background:"#E9E9E9",borderRadius:999}}>
+                      <div style={{height:"100%",borderRadius:999,background:allSub?"#12B75A":pct>0?"#FFAA01":"#E9E9E9",width:`${pct}%`}}/>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   SKU DETAIL
+───────────────────────────────────────── */
+function SKUDetailScreen({go,state,setState,live}){
+  const sku=DATA.SKU_BY_ID[state.sku]||DATA.SKUS[0];
+  const skuSc=liveSkuScanned(live,sku.id);
+  const over=skuSc>sku.plan;
+
+  return(
+    <div className="screen">
+      <StatusBar theme="light"/>
+      <AppBar title={sku.name} onBack={()=>go("home")}
+        right={<button onClick={()=>go("home")} style={{background:"none",border:0,color:"#1C7ED6",font:"700 13px/1 var(--font-display)",cursor:"pointer",padding:"0 4px"}}>Done</button>}
+        subtitle={sku.type==="free"?"Free wt · 33-digit PLU":"Fixed wt · 17-digit · count entry"}/>
+      <div className="body light" style={{padding:"14px 16px"}}>
+        {/* totals */}
+        <div className="card" style={{padding:14,marginBottom:14}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+            <div style={{display:"flex",gap:6}}><TypeTag type={sku.type}/>{sku.activeUsers>0&&<ConcurrencyPill count={sku.activeUsers}/>}</div>
+            <StatusFlag status={skuStatus(live,sku.id)}/>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:14,alignItems:"end"}}>
+            {[["Planned",sku.plan,"#0D0D0E"],["Scanned",sku.uom==="kg"?skuSc.toFixed(1):skuSc,over?"#D11243":"#0E8B45"],["Remaining",Math.max(0,sku.plan-skuSc).toFixed(sku.uom==="kg"?1:0),"#62666A"]].map(([l,v,c])=>(
+              <div key={l}><div style={{font:"500 10px/1 var(--font-display)",color:"#62666A",letterSpacing:".06em",textTransform:"uppercase"}}>{l}</div>
+              <div style={{font:"800 22px/1 var(--font-display)",marginTop:4,color:c}}>{v}<span style={{font:"500 11px/1 var(--font-display)",color:"#62666A",marginLeft:4}}>{sku.uom}</span></div></div>
+            ))}
+          </div>
+          <div className="progress thick" style={{marginTop:12}}>
+            <div className={over?"err":skuSc>=sku.plan?"ok":"warn"} style={{width:`${Math.min(100,(skuSc/sku.plan)*100)}%`}}/>
+          </div>
+        </div>
+
+        <div style={{font:"700 11px/1 var(--font-display)",color:"#62666A",letterSpacing:".08em",textTransform:"uppercase",marginBottom:8,display:"flex",justifyContent:"space-between"}}>
+          <span>Destination hubs · {sku.hubs.length}</span>
+          <span style={{textTransform:"none",letterSpacing:0,fontWeight:500,color:"#62666A"}}>tap to scan</span>
+        </div>
+
+        {sku.hubs.map(h=>{
+          const submitted=isSubmitted(live,sku.id,h.id);
+          const sc=liveHubScanned(live,sku.id,h.id);
+          const status=hubStatus(live,sku.id,h.id);
+          const hOver=sc>h.plan;
+          return(
+            <button key={h.id} className="tap-card"
+              onClick={()=>{if(!submitted){setState({...state,hub:h.id});go(sku.type==="free"?"scanFree":"scanFixed");}}}
+              style={{padding:"12px 14px",marginBottom:8,display:"flex",alignItems:"center",gap:12,opacity:submitted?.75:1,cursor:submitted?"default":"pointer"}}>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                  <span style={{font:"700 14px/1 var(--font-display)",color:"#0D0D0E"}}>{DATA.HUB_LABEL[h.id]}</span>
+                  <StatusFlag status={status}/>
+                  {submitted&&<ILock style={{width:13,height:13,color:"#62666A"}}/>}
+                </div>
+                <div style={{font:"500 11px/1 var(--font-display)",color:"#62666A"}}>
+                  <strong style={{color:hOver?"#D11243":"#2B2B2E"}}>{sku.uom==="kg"?sc.toFixed(1):sc}</strong> / {h.plan} {sku.uom}
+                  {hOver&&<span style={{color:"#D11243",marginLeft:6}}>over</span>}
+                </div>
+                <div className="progress" style={{marginTop:8,height:4}}>
+                  <div className={hOver?"err":status==="submitted"||status==="complete"?"ok":"warn"} style={{width:`${Math.min(100,(sc/h.plan)*100)}%`}}/>
+                </div>
+              </div>
+              {submitted?<ICheck style={{color:"#12B75A",flexShrink:0}}/>:<IChev style={{color:"#62666A",flexShrink:0}}/>}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   SCAN SCREENS
+───────────────────────────────────────── */
+function ScanTarget({flashState}){
+  const bc=flashState==="ok"?"#12B75A":flashState==="warn"?"#FFAA01":flashState==="err"?"#D11243":"rgba(255,255,255,.10)";
+  return(
+    <div style={{width:200,height:200,background:"#1a1a26",borderRadius:16,position:"relative",border:`2px solid ${bc}`,display:"flex",alignItems:"center",justifyContent:"center",transition:"border-color .2s",boxShadow:flashState!=="idle"?`0 0 20px ${bc}33`:"none"}}>
+      {[[0,0],[1,0],[0,1],[1,1]].map(([x,y],i)=>(
+        <div key={i} style={{position:"absolute",[x?"right":"left"]:12,[y?"bottom":"top"]:12,width:22,height:22,borderTop:!y?"3px solid #339AF0":"none",borderBottom:y?"3px solid #339AF0":"none",borderLeft:!x?"3px solid #339AF0":"none",borderRight:x?"3px solid #339AF0":"none",borderRadius:5}}/>
+      ))}
+      <div style={{position:"absolute",left:28,right:28,top:"50%",height:2,background:"#D11243",boxShadow:"0 0 10px #D11243",animation:"scanline 2s ease-in-out infinite alternate"}}/>
+      <style>{`@keyframes scanline{from{transform:translateY(-70px)}to{transform:translateY(70px)}}`}</style>
+    </div>
+  );
+}
+
+/* Free weight scan — NO expiry for free-weight items */
+function ScanFreeScreen({go,state,setState,live,commitScan}){
+  const sku      =DATA.SKU_BY_ID[state.sku]||DATA.SKUS[0];
+  const hubAlloc =sku.hubs.find(h=>h.id===state.hub)||sku.hubs[0];
+
+  // Read the latest scanned value from live state as starting point
+  const baseScanned=liveHubScanned(live,sku.id,hubAlloc.id);
+
+  const [scans,  setScans]  =useState([]); // session additions
+  const [flashSt,setFlashSt]=useState("idle");
+
+  const sessionAdd=scans.reduce((a,s)=>a+s.weight,0);
+  const total     =+(baseScanned+sessionAdd).toFixed(2);
+  const plan      =hubAlloc.plan;
+  const over      =total>plan;
+  const pct       =Math.min(100,(total/plan)*100);
+
+  function doScan(){
+    const weight=+(Math.random()*1.2+0.4).toFixed(2);
+    const bc=`890${String(Math.floor(1e8+Math.random()*8.9e8)).padStart(9,"0")}${String(Math.floor(1e4+Math.random()*8.9e4)).padStart(5,"0")}FW`;
+    setScans(s=>[{barcode:bc,weight},...s].slice(0,10));
+    setFlashSt((total+weight)>plan?"warn":"ok");
+    setTimeout(()=>setFlashSt("idle"),700);
+  }
+
+  function handleBack(){
+    // Save scan progress (not submitted) so it shows in SKU detail
+    if(scans.length>0) commitScan(sku.id,hubAlloc.id,total,false);
+    go("skuDetail");
+  }
+
+  function submitHub(){
+    commitScan(sku.id,hubAlloc.id,total,true);
+    setState(s=>({...s,lastHub:hubAlloc.id,lastScanned:total,lastPlan:plan,lastUom:sku.uom,lastSkuName:sku.name}));
+    go("hubDone");
+  }
+
+  return(
+    <div className="screen" style={{position:"relative"}}>
+      <StatusBar theme="dark"/>
+      <AppBar theme="dark" title={DATA.HUB_LABEL[hubAlloc.id]} onBack={handleBack} subtitle={sku.name}
+        right={<button onClick={()=>setScans([])} className="icon-btn" style={{color:"#fff"}}><IRefresh/></button>}/>
+      <div className="body dark" style={{display:"flex",flexDirection:"column"}}>
+        <div style={{padding:"16px 20px 6px",display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
+          <div>
+            <div style={{font:"500 10px/1 var(--font-display)",color:"rgba(255,255,255,.5)",letterSpacing:".08em",textTransform:"uppercase"}}>Scanned weight</div>
+            <div style={{font:"800 44px/1 var(--font-display)",color:over?"#FF8FAB":"#fff",marginTop:6,fontVariantNumeric:"tabular-nums",transition:"color .2s"}}>{total.toFixed(1)}</div>
+            <div style={{font:"500 11px/1 var(--font-display)",color:"rgba(255,255,255,.55)",marginTop:2}}>{sku.uom}</div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{font:"500 10px/1 var(--font-display)",color:"rgba(255,255,255,.5)",letterSpacing:".08em",textTransform:"uppercase"}}>Planned</div>
+            <div style={{font:"700 22px/1 var(--font-display)",marginTop:6,color:"rgba(255,255,255,.85)"}}>{plan}<span style={{fontSize:12,color:"rgba(255,255,255,.5)",marginLeft:4}}>{sku.uom}</span></div>
+            <div style={{font:"500 11px/1 var(--font-display)",color:"rgba(255,255,255,.5)",marginTop:4}}>{scans.length} pack{scans.length!==1?"s":""} this session</div>
+          </div>
+        </div>
+        <div style={{padding:"0 20px 8px"}}>
+          <div className="progress thick dark"><div className={over?"err":pct===100?"ok":"warn"} style={{width:`${pct}%`}}/></div>
+          {over&&<Banner kind="err" title="Planned qty already met" body="Over planned dispatch — continue if needed."/>}
+        </div>
+
+        {/* Scan area with side trigger */}
+        <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:"8px 20px",gap:14}}>
+          <ScanTarget flashState={flashSt}/>
+          <button className="scan-side-btn" style={{height:200}} onClick={doScan} title="Tap to simulate scan">
+            <IScan style={{width:22,height:22}}/><span>SCAN</span>
+          </button>
+        </div>
+
+        {/* Last scan */}
+        <div style={{padding:"4px 20px 8px",textAlign:"center"}}>
+          {scans[0]
+            ?<><div style={{font:"500 9px/1 var(--font-display)",color:"rgba(255,255,255,.4)",letterSpacing:".1em",textTransform:"uppercase",marginBottom:3}}>Last scan</div>
+               <div className="mono" style={{font:"700 11px/1.4 var(--font-display)",color:"#fff"}}>{scans[0].barcode}</div>
+               <div style={{font:"500 11px/1.4 var(--font-display)",color:"#9CFFAF",marginTop:2}}>+ {scans[0].weight} kg</div></>
+            :<div style={{font:"500 12px/1.4 var(--font-display)",color:"rgba(255,255,255,.4)"}}>33-digit PLU · weight auto-captured</div>
+          }
+        </div>
+        {scans.length>1&&(
+          <div style={{padding:"0 20px 8px",maxHeight:60,overflowY:"auto"}}>
+            {scans.slice(1,4).map((s,i)=>(
+              <div key={i} style={{display:"flex",justifyContent:"space-between",font:"500 11px/1 var(--font-display)",color:"rgba(255,255,255,.45)",padding:"2px 0"}}>
+                <span className="mono" style={{fontSize:10}}>•••{s.barcode.slice(-10)}</span>
+                <span style={{color:"#9CFFAF"}}>+{s.weight} kg</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="action dark">
+        <button className="btn btn-secondary" style={{flex:"none",padding:"0 14px",borderColor:"rgba(255,255,255,.2)",color:"#fff",background:"rgba(255,255,255,.06)"}} onClick={handleBack}>Back</button>
+        <button className="btn btn-primary" onClick={submitHub}>Submit {DATA.HUB_LABEL[hubAlloc.id]}</button>
+      </div>
+    </div>
+  );
+}
+
+/* Fixed weight scan */
+function ScanFixedScreen({go,state,setState,live,commitScan}){
+  const sku      =DATA.SKU_BY_ID[state.sku]||DATA.SKUS[0];
+  const hubAlloc =sku.hubs.find(h=>h.id===state.hub)||sku.hubs[0];
+
+  const baseScanned=liveHubScanned(live,sku.id,hubAlloc.id);
+
+  const [scans,       setScans]      =useState([]);
+  const [flashSt,     setFlashSt]    =useState("idle");
+  const [pendingScan, setPendingScan]=useState(null);
+  const [modal,       setModal]      =useState(null);
+
+  const sessionAdd=scans.reduce((a,s)=>a+s.count,0);
+  const total     =baseScanned+sessionAdd;
+  const plan      =hubAlloc.plan;
+  const over      =total>plan;
+  const pct       =Math.min(100,(total/plan)*100);
+
+  function doScan(){
+    const r=Math.random();
+    if(r<0.06){setFlashSt("err");setModal("expired");setTimeout(()=>setFlashSt("idle"),1200);return;}
+    if(r<0.13){setFlashSt("warn");setModal("tolerance");setTimeout(()=>setFlashSt("idle"),1200);return;}
+    setPendingScan({barcode:`${String(Math.floor(1e16+Math.random()*8.9e16)).slice(0,17)}`});
+  }
+
+  function confirmCount(count){
+    if(pendingScan&&count>0){
+      setScans(s=>[{barcode:pendingScan.barcode,count},...s].slice(0,10));
+      setFlashSt((total+count)>plan?"warn":"ok");
+      setTimeout(()=>setFlashSt("idle"),700);
+    }
+    setPendingScan(null);
+  }
+
+  function handleBack(){
+    if(scans.length>0) commitScan(sku.id,hubAlloc.id,total,false);
+    go("skuDetail");
+  }
+
+  function submitHub(){
+    commitScan(sku.id,hubAlloc.id,total,true);
+    setState(s=>({...s,lastHub:hubAlloc.id,lastScanned:total,lastPlan:plan,lastUom:sku.uom,lastSkuName:sku.name}));
+    go("hubDone");
+  }
+
+  return(
+    <div className="screen" style={{position:"relative"}}>
+      <StatusBar theme="dark"/>
+      <AppBar theme="dark" title={DATA.HUB_LABEL[hubAlloc.id]} onBack={handleBack} subtitle={sku.name}
+        right={<button onClick={()=>setScans([])} className="icon-btn" style={{color:"#fff"}}><IRefresh/></button>}/>
+      <div className="body dark" style={{display:"flex",flexDirection:"column"}}>
+        <div style={{padding:"16px 20px 6px",display:"flex",justifyContent:"space-between",alignItems:"flex-end"}}>
+          <div>
+            <div style={{font:"500 10px/1 var(--font-display)",color:"rgba(255,255,255,.5)",letterSpacing:".08em",textTransform:"uppercase"}}>Scanned count</div>
+            <div style={{font:"800 44px/1 var(--font-display)",color:over?"#FF8FAB":"#fff",marginTop:6,fontVariantNumeric:"tabular-nums",transition:"color .2s"}}>{total}</div>
+            <div style={{font:"500 11px/1 var(--font-display)",color:"rgba(255,255,255,.55)",marginTop:2}}>units</div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{font:"500 10px/1 var(--font-display)",color:"rgba(255,255,255,.5)",letterSpacing:".08em",textTransform:"uppercase"}}>Planned</div>
+            <div style={{font:"700 22px/1 var(--font-display)",marginTop:6,color:"rgba(255,255,255,.85)"}}>{plan}<span style={{fontSize:12,color:"rgba(255,255,255,.5)",marginLeft:4}}>u</span></div>
+            <div style={{font:"500 11px/1 var(--font-display)",color:"rgba(255,255,255,.5)",marginTop:4}}>{scans.length} scan{scans.length!==1?"s":""} this session</div>
+          </div>
+        </div>
+        <div style={{padding:"0 20px 8px"}}>
+          <div className="progress thick dark"><div className={over?"err":pct===100?"ok":"warn"} style={{width:`${pct}%`}}/></div>
+          {over&&<Banner kind="err" title="Planned qty already met" body="Over planned dispatch — continue if needed."/>}
+        </div>
+
+        <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:"8px 20px",gap:14}}>
+          <ScanTarget flashState={flashSt}/>
+          <button className="scan-side-btn" style={{height:200}} onClick={doScan} title="Tap to simulate scan">
+            <IScan style={{width:22,height:22}}/><span>SCAN</span>
+          </button>
+        </div>
+
+        <div style={{padding:"4px 20px 8px",textAlign:"center"}}>
+          {scans[0]
+            ?<><div style={{font:"500 9px/1 var(--font-display)",color:"rgba(255,255,255,.4)",letterSpacing:".1em",textTransform:"uppercase",marginBottom:3}}>Last scan</div>
+               <div className="mono" style={{font:"700 11px/1.4 var(--font-display)",color:"#fff"}}>{scans[0].barcode}</div>
+               <div style={{font:"500 11px/1.4 var(--font-display)",color:"#9CFFAF",marginTop:2}}>+ {scans[0].count} units</div></>
+            :<div style={{font:"500 12px/1.4 var(--font-display)",color:"rgba(255,255,255,.4)"}}>17-digit barcode · count entry on scan</div>
+          }
+        </div>
+        {scans.length>1&&(
+          <div style={{padding:"0 20px 8px",maxHeight:60,overflowY:"auto"}}>
+            {scans.slice(1,4).map((s,i)=>(
+              <div key={i} style={{display:"flex",justifyContent:"space-between",font:"500 11px/1 var(--font-display)",color:"rgba(255,255,255,.45)",padding:"2px 0"}}>
+                <span className="mono" style={{fontSize:10}}>•••{s.barcode.slice(-10)}</span>
+                <span style={{color:"#9CFFAF"}}>+{s.count} u</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="action dark">
+        <button className="btn btn-secondary" style={{flex:"none",padding:"0 14px",borderColor:"rgba(255,255,255,.2)",color:"#fff",background:"rgba(255,255,255,.06)"}} onClick={handleBack}>Back</button>
+        <button className="btn btn-primary" onClick={submitHub}>Submit {DATA.HUB_LABEL[hubAlloc.id]}</button>
+      </div>
+      {pendingScan&&<CountEntryModal barcode={pendingScan.barcode} onConfirm={confirmCount} onCancel={()=>setPendingScan(null)} sku={sku}/>}
+      {modal==="expired"  &&<ExpiredModal   sku={sku} onClose={()=>setModal(null)}/>}
+      {modal==="tolerance"&&<ToleranceModal sku={sku} onClose={()=>setModal(null)}/>}
+    </div>
+  );
+}
+
+/* Count entry modal */
+function CountEntryModal({barcode,onConfirm,onCancel,sku}){
+  const [n,setN]=useState("1");
+  const num=parseInt(n,10);
+  return(
+    <div className="scrim center" onClick={e=>{if(e.target===e.currentTarget)onCancel();}}>
+      <div className="modal-card">
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+          <div style={{width:36,height:36,borderRadius:8,background:"#F0F9FF",color:"#1C7ED6",display:"flex",alignItems:"center",justifyContent:"center"}}><ICount style={{width:20,height:20}}/></div>
+          <div><div style={{font:"700 16px/1.2 var(--font-display)",color:"#0D0D0E"}}>Enter pack count</div>
+          <div style={{font:"500 11px/1 var(--font-display)",color:"#62666A",marginTop:2}}>{sku.name}</div></div>
+        </div>
+        <div style={{padding:"10px 12px",background:"#F8F8F8",borderRadius:8,font:"500 11px/1 var(--font-display)",color:"#62666A",marginBottom:16,display:"flex",justifyContent:"space-between"}}>
+          <span>Barcode</span><span className="mono" style={{color:"#2B2B2E",fontWeight:700}}>{barcode}</span>
+        </div>
+        <div className="field-label">Count (units)</div>
+        <div style={{display:"flex",gap:10,alignItems:"center"}}>
+          <button onClick={()=>setN(String(Math.max(1,(num||1)-1)))} style={{width:48,height:52,borderRadius:12,background:"#F0F1F2",border:0,font:"800 22px/1 var(--font-display)",cursor:"pointer"}}>−</button>
+          <input value={n} onChange={e=>setN(e.target.value.replace(/\D/g,""))} inputMode="numeric" autoFocus style={{flex:1,minWidth:0,height:52,borderRadius:12,border:"1px solid #C0C1C3",textAlign:"center",font:"800 26px/1 var(--font-display)",color:"#0D0D0E",outline:"none",background:"#fff",padding:0}}/>
+          <button onClick={()=>setN(String((num||0)+1))} style={{width:48,height:52,borderRadius:12,background:"#F0F1F2",border:0,font:"800 22px/1 var(--font-display)",cursor:"pointer"}}>+</button>
+        </div>
+        <div style={{display:"flex",gap:10,marginTop:20}}>
+          <button className="btn btn-secondary" onClick={onCancel}>Cancel</button>
+          <button className="btn btn-primary" disabled={!(num>0)} onClick={()=>onConfirm(num)}>Add {num>0?`${num} u`:""}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ExpiredModal({sku,onClose}){
+  return(
+    <div className="scrim center" onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div className="modal-card" style={{borderTop:"4px solid #D11243"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+          <div style={{width:36,height:36,borderRadius:"50%",background:"#D11243",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}><IClock/></div>
+          <div style={{font:"700 18px/1.2 var(--font-display)",color:"#D11243"}}>Expired pack</div>
+        </div>
+        <div style={{font:"500 13px/1.5 var(--font-display)",color:"#2B2B2E"}}>This pack's use-by date is past. It cannot be dispatched.</div>
+        <div style={{marginTop:14,padding:12,background:"#FDF3F6",borderRadius:8,font:"500 11px/1.4 var(--font-display)",color:"#2B2B2E"}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span>SKU</span><strong>{sku.name}</strong></div>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span>Use by</span><strong style={{color:"#D11243"}}>13 May 2026</strong></div>
+          <div style={{display:"flex",justifyContent:"space-between"}}><span>Action</span><strong>Set aside · log for reverse-flow</strong></div>
+        </div>
+        <div style={{display:"flex",gap:10,marginTop:18}}>
+          <button className="btn btn-secondary" onClick={onClose}>Log &amp; continue</button>
+          <button className="btn btn-primary" onClick={onClose}>Set aside</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ToleranceModal({sku,onClose}){
+  return(
+    <div className="scrim center" onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div className="modal-card" style={{borderTop:"4px solid #FFAA01"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+          <div style={{width:36,height:36,borderRadius:"50%",background:"#FFAA01",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center"}}><IAlert/></div>
+          <div style={{font:"700 18px/1.2 var(--font-display)",color:"#EE8511"}}>Weight tolerance issue</div>
+        </div>
+        <div style={{font:"500 13px/1.5 var(--font-display)",color:"#2B2B2E"}}>Pack weight is outside the expected ±5% range.</div>
+        <div style={{marginTop:14,padding:12,background:"#FFFEEC",borderRadius:8,font:"500 11px/1.4 var(--font-display)",color:"#2B2B2E"}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span>Expected</span><strong>250 g ±5%</strong></div>
+          <div style={{display:"flex",justifyContent:"space-between"}}><span>Captured</span><strong style={{color:"#EE8511"}}>282 g · +12.8%</strong></div>
+        </div>
+        <div style={{display:"flex",gap:10,marginTop:18}}>
+          <button className="btn btn-secondary" onClick={onClose}>Set aside</button>
+          <button className="btn btn-primary" style={{background:"#FFAA01"}} onClick={onClose}>Accept &amp; continue</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   HUB DONE
+───────────────────────────────────────── */
+function HubDoneScreen({go,state,live}){
+  const hubId   =state.lastHub||DATA.HUBS[0].id;
+  const sc      =state.lastScanned??0;
+  const plan    =state.lastPlan??0;
+  const uom     =state.lastUom||"kg";
+  const skuName =state.lastSkuName||"";
+  const pct     =plan>0?Math.round((sc/plan)*100):100;
+  const over    =sc>plan;
+
+  // Check remaining unscan hubs for this SKU
+  const sku=DATA.SKU_BY_ID[state.sku];
+  const remaining=sku?sku.hubs.filter(h=>!isSubmitted(live,sku.id,h.id)).length:0;
+
+  return(
+    <div className="screen">
+      <StatusBar theme="light"/>
+      <div className="body light" style={{padding:"0 24px",display:"flex",flexDirection:"column",alignItems:"center"}}>
+        <div style={{marginTop:44,width:84,height:84,borderRadius:"50%",background:"#E9F9EE",color:"#12B75A",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <ICheck style={{width:46,height:46,strokeWidth:2.5}}/>
+        </div>
+        <div style={{font:"800 21px/1.3 var(--font-display)",color:"#0D0D0E",marginTop:18,textAlign:"center"}}>
+          {DATA.HUB_LABEL[hubId]} submitted
+        </div>
+        <div style={{font:"500 13px/1.5 var(--font-display)",color:"#62666A",marginTop:4,textAlign:"center"}}>{skuName}</div>
+
+        <div className="card" style={{width:"100%",padding:16,marginTop:20}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+            {[["Scanned",`${uom==="kg"?sc.toFixed(1):sc} ${uom}`,over?"#D11243":"#0E8B45"],
+              ["Planned",`${plan} ${uom}`,"#2B2B2E"],
+              ["Progress",`${pct}%`,over?"#D11243":"#0E8B45"],
+              ["Status","Submitted","#1C7ED6"]].map(([l,v,c])=>(
+              <div key={l}><div style={{font:"500 10px/1 var(--font-display)",color:"#62666A",letterSpacing:".06em",textTransform:"uppercase",marginBottom:4}}>{l}</div>
+              <div style={{font:"700 16px/1.2 var(--font-display)",color:c}}>{v}</div></div>
+            ))}
+          </div>
+          <div className="progress thick" style={{marginTop:14}}>
+            <div className={over?"err":"ok"} style={{width:`${Math.min(100,pct)}%`}}/>
+          </div>
+        </div>
+
+        {remaining>0
+          ?<div style={{marginTop:12,padding:14,background:"#F0F9FF",borderRadius:10,font:"500 12px/1.5 var(--font-display)",color:"#1C7ED6",width:"100%",textAlign:"center"}}>
+             <strong>{remaining} hub{remaining!==1?"s":""}</strong> remaining for this SKU. Go back to scan them.
+           </div>
+          :<Banner kind="ok" title="All hubs done for this SKU" body="Navigate home to review and submit the outward."/>
+        }
+      </div>
+      <div className="action">
+        <button className="btn btn-secondary" style={{flex:"none",padding:"0 14px"}} onClick={()=>go("home")}>Home</button>
+        {remaining>0
+          ?<button className="btn btn-primary" onClick={()=>go("skuDetail")}>Back to {skuName.length>16?skuName.slice(0,16)+"…":skuName}</button>
+          :<button className="btn btn-primary" onClick={()=>go("home")}>All hubs done · Home</button>
+        }
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   HUB SUBMIT (from Home action bar)
+   Marks ALL SKU-hub pairs for that hub as submitted
+───────────────────────────────────────── */
+function HubSubmitScreen({go,state,live,commitScan}){
+  const hubId=state.hub==="all"?DATA.HUBS[0].id:state.hub;
+  const hub  =DATA.HUBS.find(h=>h.id===hubId);
+  const rows =DATA.SKUS
+    .map(s=>({sku:s,alloc:s.hubs.find(h=>h.id===hubId),sc:liveHubScanned(live,s.id,hubId)}))
+    .filter(r=>r.alloc&&r.alloc.plan>0);
+
+  const missed=rows.filter(r=>r.sc===0);
+  const under =rows.filter(r=>r.sc>0&&r.sc<r.alloc.plan*0.9);
+  const ready =rows.length>0&&missed.length===0;
+
+  function doSubmit(){
+    // Commit all rows for this hub as submitted (using current live scanned values)
+    rows.forEach(r=>commitScan(r.sku.id,hubId,r.sc,true));
+    go("home");
+  }
+
+  return(
+    <div className="screen">
+      <StatusBar theme="light"/>
+      <AppBar title={`Submit ${hub.label}`} onBack={()=>go("home")}/>
+      <div className="body light" style={{padding:"14px 16px"}}>
+        <div style={{font:"800 22px/1.3 var(--font-display)",color:"#0D0D0E"}}>Lock {hub.label} outward</div>
+        <div style={{font:"500 13px/1.5 var(--font-display)",color:"#62666A",marginTop:4}}>Submitting locks all SKU scans for this destination hub.</div>
+
+        {missed.length>0&&(
+          <div style={{marginTop:14,padding:14,background:"#FDF3F6",border:"1px solid #D11243",borderRadius:12}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+              <IAlert style={{color:"#D11243"}}/><div style={{font:"700 14px/1 var(--font-display)",color:"#D11243"}}>Missed dispatch · {missed.length} SKU{missed.length!==1?"s":""}</div>
+            </div>
+            <div style={{font:"500 12px/1.4 var(--font-display)",color:"#2B2B2E",marginBottom:10}}>Zero scans. <strong>Email alert will be sent on submit.</strong></div>
+            {missed.map(r=>(
+              <div key={r.sku.id} style={{display:"flex",justifyContent:"space-between",padding:"6px 10px",background:"#fff",borderRadius:6,marginTop:4,font:"500 12px/1 var(--font-display)"}}>
+                <span style={{fontWeight:700}}>{r.sku.name}</span><span style={{color:"#D11243"}}>0 / {r.alloc.plan} {r.sku.uom}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {under.length>0&&(
+          <div style={{marginTop:12,padding:14,background:"#FFFEEC",border:"1px solid #FFAA01",borderRadius:12}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+              <IAlert style={{color:"#EE8511"}}/><div style={{font:"700 14px/1 var(--font-display)",color:"#EE8511"}}>Under-scanned · {under.length} SKU{under.length!==1?"s":""}</div>
+            </div>
+            <div style={{font:"500 12px/1.4 var(--font-display)",color:"#2B2B2E",marginBottom:10}}>Below 90% threshold. You can still proceed.</div>
+            {under.map(r=>(
+              <div key={r.sku.id} style={{display:"flex",justifyContent:"space-between",padding:"6px 10px",background:"#fff",borderRadius:6,marginTop:4,font:"500 12px/1 var(--font-display)"}}>
+                <span style={{fontWeight:700}}>{r.sku.name}</span><span style={{color:"#EE8511"}}>{r.sc} / {r.alloc.plan} {r.sku.uom}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {ready&&<Banner kind="ok" title="All SKUs complete" body={`${rows.length} SKUs at or above plan.`}/>}
+
+        <div style={{font:"700 11px/1 var(--font-display)",color:"#62666A",letterSpacing:".08em",textTransform:"uppercase",marginTop:20,marginBottom:8}}>Summary · {rows.length} SKUs</div>
+        {rows.map(r=>{
+          const st=isSubmitted(live,r.sku.id,hubId)?"submitted":hubStatus(live,r.sku.id,hubId);
+          return(
+            <div key={r.sku.id} className="card" style={{padding:"10px 12px",marginBottom:6,display:"flex",alignItems:"center",gap:10}}>
+              <div style={{flex:1}}>
+                <div style={{font:"700 13px/1.2 var(--font-display)",color:"#0D0D0E"}}>{r.sku.name}</div>
+                <div style={{font:"500 11px/1.3 var(--font-display)",color:"#62666A",marginTop:2}}>
+                  <strong style={{color:r.sc>r.alloc.plan?"#D11243":"#2B2B2E"}}>{r.sku.uom==="kg"?r.sc.toFixed(1):r.sc}</strong> / {r.alloc.plan} {r.sku.uom}
+                </div>
+              </div>
+              <StatusFlag status={st}/>
+            </div>
+          );
+        })}
+      </div>
+      <div className="action">
+        <button className="btn btn-secondary" onClick={()=>go("home")} style={{flex:"none",padding:"0 18px"}}>Back</button>
+        <button className="btn btn-primary" onClick={doSubmit}>Submit {hub.label}</button>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   OUTWARD SUBMIT
+───────────────────────────────────────── */
+function OutwardSubmitScreen({go,live,commitScan}){
+  const hubRows=DATA.HUBS.map(h=>{
+    const skus   =DATA.SKUS.filter(s=>s.hubs.some(hh=>hh.id===h.id&&hh.plan>0));
+    const plan   =+skus.reduce((a,s)=>a+(s.hubs.find(hh=>hh.id===h.id)?.plan||0),0).toFixed(1);
+    const sc     =+skus.reduce((a,s)=>a+liveHubScanned(live,s.id,h.id),0).toFixed(1);
+    const allSub =skus.every(s=>isSubmitted(live,s.id,h.id));
+    const status =allSub?"submitted":sc>=plan&&plan>0?"complete":sc>0?"progress":"pending";
+    return {hub:h,plan,sc,skuCount:skus.length,status};
+  });
+
+  const allHubsDone=hubRows.every(r=>r.status==="submitted"||r.status==="complete");
+
+  function doSubmit(){
+    // Mark any remaining as submitted at their current scanned values
+    DATA.HUBS.forEach(h=>{
+      DATA.SKUS.filter(s=>s.hubs.some(hh=>hh.id===h.id&&hh.plan>0)).forEach(s=>{
+        if(!isSubmitted(live,s.id,h.id)) commitScan(s.id,h.id,liveHubScanned(live,s.id,h.id),true);
+      });
+    });
+    go("submitted");
+  }
+
+  return(
+    <div className="screen">
+      <StatusBar theme="light"/>
+      <AppBar title="Submit Outward" onBack={()=>go("home")}/>
+      <div className="body light" style={{padding:"14px 16px"}}>
+        <div style={{font:"800 22px/1.3 var(--font-display)",color:"#0D0D0E"}}>SH Outward · 14 May</div>
+        <div style={{font:"500 13px/1.5 var(--font-display)",color:"#62666A",marginTop:4}}>{hubRows.length} destination hubs · {DATA.SKUS.length} SKUs</div>
+        <div style={{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 10px",background:"#FDF3F6",borderRadius:6,marginTop:8,font:"700 11px/1 var(--font-display)",color:"#D11243"}}>
+          <ICrown style={{width:14,height:14}}/> Supervisor action
+        </div>
+
+        {!allHubsDone&&<Banner kind="warn" title={`${hubRows.filter(r=>r.status==="pending"||r.status==="progress").length} hubs still in progress`} body="Submit each hub first (Home → tap hub chip → Submit hub), then submit the outward."/>}
+        {allHubsDone &&<Banner kind="ok"   title="All hubs locked" body="Ready to submit the final outward."/>}
+
+        <div style={{font:"700 11px/1 var(--font-display)",color:"#62666A",letterSpacing:".08em",textTransform:"uppercase",marginTop:14,marginBottom:8}}>By destination hub</div>
+        {hubRows.map(r=>(
+          <div key={r.hub.id} className="card" style={{padding:"12px 14px",marginBottom:8}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div><div style={{font:"700 14px/1.2 var(--font-display)",color:"#0D0D0E"}}>{r.hub.label}</div>
+              <div style={{font:"500 11px/1.3 var(--font-display)",color:"#62666A",marginTop:2}}>{r.skuCount} SKUs · {r.sc} / {r.plan}</div></div>
+              <StatusFlag status={r.status}/>
+            </div>
+            <div className="progress" style={{marginTop:10}}>
+              <div className={r.status==="submitted"||r.status==="complete"?"ok":"warn"} style={{width:`${Math.min(100,r.plan>0?(r.sc/r.plan)*100:0)}%`}}/>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="action">
+        <button className="btn btn-secondary" onClick={()=>go("home")} style={{flex:"none",padding:"0 18px"}}>Back</button>
+        <button className="btn btn-primary" onClick={doSubmit}>Submit Outward</button>
+      </div>
+    </div>
+  );
+}
+
+function SubmittedScreen({go,live}){
+  const totalSc =+DATA.SKUS.reduce((a,s)=>a+liveSkuScanned(live,s.id),0).toFixed(1);
+  const totalPl =DATA.SKUS.reduce((a,s)=>a+s.plan,0);
+  const freeSc  =+DATA.SKUS.filter(s=>s.type==="free").reduce((a,s)=>a+liveSkuScanned(live,s.id),0).toFixed(1);
+  const fixedSc =DATA.SKUS.filter(s=>s.type==="fixed").reduce((a,s)=>a+liveSkuScanned(live,s.id),0);
+  return(
+    <div className="screen">
+      <StatusBar theme="light"/>
+      <div className="body light" style={{padding:"36px 24px",display:"flex",flexDirection:"column",alignItems:"center"}}>
+        <div style={{width:96,height:96,borderRadius:"50%",background:"#E9F9EE",color:"#12B75A",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <ICheck style={{width:54,height:54,strokeWidth:3}}/>
+        </div>
+        <div style={{font:"800 24px/1.3 var(--font-display)",color:"#0D0D0E",marginTop:24,textAlign:"center"}}>Outward submitted</div>
+        <div style={{font:"500 13px/1.5 var(--font-display)",color:"#62666A",marginTop:6,textAlign:"center"}}>
+          BLR Retail SH · 14 May<br/>
+          {freeSc} kg free wt · {fixedSc} units fixed wt · {DATA.HUBS.length} hubs
+        </div>
+        <div style={{marginTop:28,width:"100%"}}>
+          <div className="card" style={{padding:14,marginBottom:8}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+              <span style={{font:"500 11px/1 var(--font-display)",color:"#62666A",letterSpacing:".06em",textTransform:"uppercase"}}>Total scanned</span>
+              <span style={{font:"700 13px/1 var(--font-display)",color:totalSc>=totalPl?"#0E8B45":"#EE8511"}}>{totalSc} / {totalPl}</span>
+            </div>
+            <div className="progress"><div className={totalSc>=totalPl?"ok":"warn"} style={{width:`${Math.min(100,(totalSc/totalPl)*100)}%`}}/></div>
+          </div>
+          <div className="card" style={{padding:14,marginBottom:8}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+              <span style={{font:"500 11px/1 var(--font-display)",color:"#62666A",letterSpacing:".06em",textTransform:"uppercase"}}>Email alerts</span>
+              <Badge kind="info">Sent</Badge>
+            </div>
+            <div style={{font:"500 12px/1.5 var(--font-display)",color:"#2B2B2E"}}>Missed-dispatch alerts sent to store ops + planning.</div>
+          </div>
+          <div className="card" style={{padding:14}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+              <span style={{font:"500 11px/1 var(--font-display)",color:"#62666A",letterSpacing:".06em",textTransform:"uppercase"}}>Submitted at</span>
+              <span style={{font:"700 12px/1 var(--font-display)"}}>9:41 AM</span>
+            </div>
+            <div style={{font:"500 12px/1.5 var(--font-display)",color:"#2B2B2E"}}>All hub dispatches locked. Hub dashboard updated.</div>
+          </div>
+        </div>
+      </div>
+      <div className="action">
+        <button className="btn btn-primary" onClick={()=>go("login")}>Done</button>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   ROOT APP
+───────────────────────────────────────── */
+const FLOWS=[
+  {group:"AUTH",screens:[
+    {id:"login",      label:"Login",    C:p=><LoginScreen       {...p}/>},
+    {id:"otp",        label:"OTP",      C:p=><OTPScreen         {...p}/>},
+    {id:"hubIdentity",label:"Hub badge",C:p=><HubIdentityScreen {...p}/>},
+  ]},
+  {group:"MAIN",screens:[
+    {id:"home",     label:"Home",C:p=><HomeScreen     {...p}/>},
+    {id:"skuDetail",label:"SKU", C:p=><SKUDetailScreen {...p}/>},
+  ]},
+  {group:"SCAN",screens:[
+    {id:"scanFree", label:"Scan free",  C:p=><ScanFreeScreen  {...p}/>},
+    {id:"scanFixed",label:"Scan fixed", C:p=><ScanFixedScreen {...p}/>},
+    {id:"hubDone",  label:"Hub done",   C:p=><HubDoneScreen   {...p}/>},
+  ]},
+  {group:"SUBMIT",screens:[
+    {id:"hubSubmit",     label:"Hub submit",     C:p=><HubSubmitScreen     {...p}/>},
+    {id:"outwardSubmit", label:"Outward submit", C:p=><OutwardSubmitScreen {...p}/>},
+    {id:"submitted",     label:"Done",           C:p=><SubmittedScreen     {...p}/>},
+  ]},
+];
+const ALL=FLOWS.flatMap(f=>f.screens);
+
+function App(){
+  const [active,   setActive]  =useState("login");
+  const [user,     setUser]    =useState({loggedIn:false});
+  const [state,    setState]   =useState({cat:"all",hub:"all",sku:null});
+  // ── Live scan state: { 'skuId:hubId': { scanned:number, submitted:bool } }
+  const [live,     setLive]    =useState({});
+
+  // Commit a scan result (or save progress mid-session)
+  const commitScan=useCallback((skuId,hubId,scanned,submitted)=>{
+    setLive(prev=>({...prev,[hubKey(skuId,hubId)]:{scanned:+scanned,submitted:!!submitted}}));
+  },[]);
+
+  // Pre-fill state when jumping via nav strip
+  useEffect(()=>{
+    if(active==="hubSubmit"&&(state.hub==="all"))setState(s=>({...s,hub:DATA.HUBS[0].id}));
+    if(active==="skuDetail"&&!state.sku)         setState(s=>({...s,sku:DATA.SKUS[0].id}));
+    if(active==="scanFree"||active==="scanFixed"){
+      setState(s=>{
+        const n={...s};
+        if(!n.sku)n.sku=active==="scanFree"?"sku-ckn-cc":"sku-ckn-wg";
+        if(!n.hub||n.hub==="all")n.hub="aecs";
+        return n;
+      });
+    }
+    if(active==="hubDone"&&!state.lastHub){
+      setState(s=>({...s,lastHub:"aecs",lastScanned:18.4,lastPlan:24.0,lastUom:"kg",lastSkuName:"Chicken Whole Curry Cut"}));
+    }
+  },[active]);
+
+  // Build nav strip
+  useEffect(()=>{
+    const nav=document.getElementById("nav");
+    nav.innerHTML="";
+    FLOWS.forEach(flow=>{
+      const grp=document.createElement("div");grp.className="group";
+      const lbl=document.createElement("div");lbl.className="group-label";lbl.textContent=flow.group;
+      grp.appendChild(lbl);
+      flow.screens.forEach(s=>{
+        const b=document.createElement("button");
+        b.textContent=s.label;b.className=s.id===active?"active":"";b.onclick=()=>setActive(s.id);
+        grp.appendChild(b);
+      });
+      nav.appendChild(grp);
+    });
+  },[active]);
+
+  const item=ALL.find(s=>s.id===active)||ALL[0];
+  const props={go:setActive,state,setState,user,setUser,live,commitScan};
+
+  return(
+    <div className="kit-shell">
+      <div className="kit-viewport">
+        {item.C(props)}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
