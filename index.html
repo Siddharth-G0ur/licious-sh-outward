@@ -1250,7 +1250,7 @@ function OutwardSubmitScreen({go,live,commitScan}){
         <div style={{font:"800 22px/1.3 var(--font-display)",color:"#0D0D0E"}}>SH Outward · 14 May</div>
         <div style={{font:"500 13px/1.5 var(--font-display)",color:"#62666A",marginTop:4}}>{hubRows.length} destination hubs · {DATA.SKUS.length} SKUs</div>
         <div style={{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 10px",background:"#FDF3F6",borderRadius:6,marginTop:8,font:"700 11px/1 var(--font-display)",color:"#D11243"}}>
-          <ICrown style={{width:14,height:14}}/> Supervisor action
+          Supervisor action
         </div>
 
         {!allHubsDone&&<Banner kind="warn" title={`${hubRows.filter(r=>r.status==="pending"||r.status==="progress").length} hubs still in progress`} body="Submit each hub first (Home → tap hub chip → Submit hub), then submit the outward."/>}
