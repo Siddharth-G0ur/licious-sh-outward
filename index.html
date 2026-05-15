@@ -556,13 +556,9 @@ function HomeScreen({go,state,setState,live}){
     <div className="screen">
       <StatusBar theme="light"/>
       {/* header */}
-      <div style={{background:"#fff",padding:"8px 16px",display:"flex",alignItems:"center",gap:10,boxShadow:"0 3px 6px rgba(0,0,0,.05)",flexShrink:0}}>
-        <button onClick={()=>go("hubIdentity")} style={{background:"none",border:0,padding:0,cursor:"pointer",display:"flex",alignItems:"center",gap:10}}>
-          <div style={{width:36,height:36,borderRadius:"50%",background:"#252638",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",font:"700 14px/1 var(--font-display)",flexShrink:0}}>K</div>
-          <div style={{textAlign:"left"}}>
-            <div style={{font:"700 14px/1 var(--font-display)",color:"#0D0D0E"}}>BLR Retail SH</div>
-            <div style={{font:"500 11px/1.3 var(--font-display)",color:"#62666A",marginTop:2}}>Kumar · Shift A · 14 May</div>
-          </div>
+      <div style={{background:"#fff",padding:"6px 12px",display:"flex",alignItems:"center",gap:8,boxShadow:"0 3px 6px rgba(0,0,0,.05)",flexShrink:0}}>
+        <button onClick={()=>go("hubIdentity")} style={{background:"none",border:0,padding:0,cursor:"pointer",display:"flex",alignItems:"center"}} title="Hub details">
+          <div style={{width:30,height:30,borderRadius:"50%",background:"#252638",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",font:"700 13px/1 var(--font-display)",flexShrink:0}}>K</div>
         </button>
         <div style={{flex:1}}/>
         {DATA.USER.canSubmitOutward&&(
@@ -574,25 +570,14 @@ function HomeScreen({go,state,setState,live}){
 
       {/* summary card */}
       <div style={{padding:"8px 16px 0",flexShrink:0,background:"#F8F8F8"}}>
-        <div style={{background:"linear-gradient(135deg,#252638 0%,#414153 100%)",color:"#fff",borderRadius:10,padding:"10px 12px"}}>
-          {/* top row: label + pct + badge */}
+        <div style={{background:"linear-gradient(135deg,#252638 0%,#414153 100%)",color:"#fff",borderRadius:10,padding:"8px 12px"}}>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <div style={{font:"500 9px/1 var(--font-display)",color:"rgba(255,255,255,.45)",letterSpacing:".08em",textTransform:"uppercase",flexShrink:0}}>SH OUTWARD · 14 MAY</div>
+            <div style={{font:"500 9px/1 var(--font-display)",color:"rgba(255,255,255,.4)",letterSpacing:".08em",textTransform:"uppercase"}}>SH OUTWARD</div>
             <div style={{flex:1}}/>
-            <div style={{font:"700 18px/1 var(--font-display)"}}>{overallPct}%<span style={{font:"500 11px/1 var(--font-display)",color:"rgba(255,255,255,.5)",marginLeft:4}}>scanned</span></div>
-            <Badge kind={allDone?"ok":"dark"} style={{marginLeft:4}}>{allDone?"Done":"In Progress"}</Badge>
+            <div style={{font:"700 16px/1 var(--font-display)"}}>{overallPct}%<span style={{font:"500 10px/1 var(--font-display)",color:"rgba(255,255,255,.5)",marginLeft:4}}>scanned</span></div>
+            <Badge kind={allDone?"ok":"dark"}>{allDone?"Done":"In Progress"}</Badge>
           </div>
-          {/* progress bar */}
-          <div className="progress dark" style={{marginTop:8,height:3}}><div className="ok" style={{width:`${overallPct}%`}}/></div>
-          {/* stats row */}
-          <div style={{display:"flex",gap:0,marginTop:8,paddingTop:8,borderTop:"1px solid rgba(255,255,255,.08)"}}>
-            {[["SKUs",DATA.SKUS.length],["Hubs",DATA.HUBS.length],["Pending",counts.all]].map(([k,v])=>(
-              <div key={k} style={{flex:1,display:"flex",alignItems:"baseline",gap:5}}>
-                <span style={{font:"700 13px/1 var(--font-display)",color:k==="Pending"&&v>0?"#FFAA01":"#fff"}}>{v}</span>
-                <span style={{font:"500 9px/1 var(--font-display)",color:"rgba(255,255,255,.4)",letterSpacing:".06em",textTransform:"uppercase"}}>{k}</span>
-              </div>
-            ))}
-          </div>
+          <div className="progress dark" style={{marginTop:7,height:3}}><div className="ok" style={{width:`${overallPct}%`}}/></div>
         </div>
       </div>
 
