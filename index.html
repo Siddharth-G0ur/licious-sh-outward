@@ -424,12 +424,8 @@ function LoginScreen({go,setUser}){
     <div className="screen">
       <StatusBar theme="light"/>
       <div className="body light" style={{padding:"0 24px",display:"flex",flexDirection:"column",overflowY:"auto"}}>
-        <div style={{textAlign:"center",paddingTop:40,paddingBottom:20}}><LiciousMark/>
-          <div style={{font:"500 11px/1 var(--font-display)",color:"#62666A",marginTop:8,letterSpacing:".16em",textTransform:"uppercase"}}>SH Outward</div>
-        </div>
-        <div style={{font:"800 26px/1.2 var(--font-display)",color:"#0D0D0E"}}>Welcome back</div>
-        <div style={{font:"500 14px/1.5 var(--font-display)",color:"#62666A",marginTop:6}}>Sign in with your employee ID to start scanning.</div>
-        <div style={{marginTop:28}}><Field label="Employee ID" value={empId} onChange={setEmpId} placeholder="EMP-2041" inputMode="text" autoFocus prefix={<IPhone style={{color:"#62666A"}}/>}/></div>
+        <div style={{textAlign:"center",paddingTop:48,paddingBottom:32}}><LiciousMark/></div>
+        <div style={{marginTop:0}}><Field label="Employee ID" value={empId} onChange={setEmpId} placeholder="EMP-2041" inputMode="text" autoFocus prefix={<IPhone style={{color:"#62666A"}}/>}/></div>
         <div style={{flex:1,minHeight:16}}/>
         <div style={{marginTop:12,padding:14,background:"#F0F9FF",borderRadius:10,font:"500 12px/1.5 var(--font-display)",color:"#1C7ED6",marginBottom:8}}>OTP will be sent to your registered phone ending <strong>**41</strong>.</div>
       </div>
