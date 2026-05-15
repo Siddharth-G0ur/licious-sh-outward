@@ -517,6 +517,7 @@ function HomeScreen({go,state,setState,live}){
   const cat=state.cat||"all";
   const hub=state.hub||"all";
   const [showSummary,setShowSummary]=React.useState(false);
+  const [summaryTab,setSummaryTab]=React.useState("store");
 
   // Pending = at least one hub not submitted and scanned < plan
   function skuPending(sku){
@@ -647,11 +648,24 @@ function HomeScreen({go,state,setState,live}){
               <div style={{font:"700 16px/1 var(--font-display)",color:"#0D0D0E"}}>Progress Summary</div>
               <button onClick={()=>setShowSummary(false)} className="icon-btn" style={{color:"#62666A"}}><IClose/></button>
             </div>
+            {/* toggle */}
+            <div style={{padding:"10px 16px 0",flexShrink:0}}>
+              <div style={{display:"flex",background:"#F0F1F2",borderRadius:8,padding:3}}>
+                {[["store","By Store"],["sku","By SKU"]].map(([id,label])=>(
+                  <button key={id} onClick={()=>setSummaryTab(id)} style={{
+                    flex:1,padding:"6px 0",border:0,borderRadius:6,cursor:"pointer",
+                    font:"600 12px/1 var(--font-display)",
+                    background:summaryTab===id?"#fff":"transparent",
+                    color:summaryTab===id?"#0D0D0E":"#62666A",
+                    boxShadow:summaryTab===id?"0 1px 3px rgba(0,0,0,.12)":"none",
+                    transition:"all 120ms",
+                  }}>{label}</button>
+                ))}
+              </div>
+            </div>
             <div style={{overflowY:"auto",padding:"12px 16px 24px"}}>
 
-              {/* SKU level */}
-              <div style={{font:"700 10px/1 var(--font-display)",color:"#62666A",letterSpacing:".08em",textTransform:"uppercase",marginBottom:8}}>By SKU</div>
-              {DATA.SKUS.map(sku=>{
+              {summaryTab==="sku"&&DATA.SKUS.map(sku=>{
                 const sc=liveSkuScanned(live,sku.id);
                 const pct=sku.plan===0?0:Math.min(100,Math.round((sc/sku.plan)*100));
                 const st=skuStatus(live,sku.id);
@@ -674,14 +688,9 @@ function HomeScreen({go,state,setState,live}){
                 );
               })}
 
-              {/* Store level */}
-              <div style={{font:"700 10px/1 var(--font-display)",color:"#62666A",letterSpacing:".08em",textTransform:"uppercase",margin:"16px 0 8px"}}>By Store / Hub</div>
-              {DATA.HUBS.map(h=>{
+              {summaryTab==="store"&&DATA.HUBS.map(h=>{
                 const skusForHub=DATA.SKUS.filter(s=>s.hubs.some(hh=>hh.id===h.id&&hh.plan>0));
-                const planTotal =skusForHub.reduce((a,s)=>{
-                  const hh=s.hubs.find(x=>x.id===h.id);
-                  return a+(hh?hh.plan:0);
-                },0);
+                const planTotal =skusForHub.reduce((a,s)=>{const hh=s.hubs.find(x=>x.id===h.id);return a+(hh?hh.plan:0);},0);
                 const scTotal   =skusForHub.reduce((a,s)=>a+liveHubScanned(live,s.id,h.id),0);
                 const submittedN=skusForHub.filter(s=>isSubmitted(live,s.id,h.id)).length;
                 const allSub    =submittedN===skusForHub.length&&skusForHub.length>0;
