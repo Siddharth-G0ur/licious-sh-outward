@@ -563,8 +563,8 @@ function HomeScreen({go,state,setState,live}){
         </button>
         <div style={{flex:1}}/>
         {DATA.USER.canSubmitOutward&&(
-          <button onClick={()=>hub==="all"?go("outwardSubmit"):go("hubSubmit")} style={{background:"#D11243",border:0,borderRadius:8,padding:"6px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:5,color:"#fff",font:"700 12px/1 var(--font-display)",flexShrink:0}}>
-            {hub==="all"?"Submit Outward":`Submit ${DATA.HUB_LABEL[hub]}`}
+          <button onClick={()=>go("outwardSubmit")} style={{background:"#D11243",border:0,borderRadius:8,padding:"6px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:5,color:"#fff",font:"700 12px/1 var(--font-display)",flexShrink:0}}>
+            Submit Outward
           </button>
         )}
         <button onClick={()=>setShowSummary(true)} className="icon-btn" style={{color:"#62666A"}} title="Summary"><IBarChart/></button>
