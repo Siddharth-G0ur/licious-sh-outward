@@ -563,8 +563,8 @@ function HomeScreen({go,state,setState,live}){
         </button>
         <div style={{flex:1}}/>
         {DATA.USER.canSubmitOutward&&(
-          <button onClick={()=>go("outwardSubmit")} style={{background:"#D11243",border:0,borderRadius:8,padding:"6px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:5,color:"#fff",font:"700 12px/1 var(--font-display)",flexShrink:0}} title="Submit Outward">
-            Submit
+          <button onClick={()=>hub==="all"?go("outwardSubmit"):go("hubSubmit")} style={{background:"#D11243",border:0,borderRadius:8,padding:"6px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:5,color:"#fff",font:"700 12px/1 var(--font-display)",flexShrink:0}}>
+            {hub==="all"?"Submit Outward":`Submit ${DATA.HUB_LABEL[hub]}`}
           </button>
         )}
         <button onClick={()=>setShowSummary(true)} className="icon-btn" style={{color:"#62666A"}} title="Summary"><IBarChart/></button>
@@ -609,7 +609,6 @@ function HomeScreen({go,state,setState,live}){
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:4}}>
                       <TypeTag type={sku.type}/>
-                      {sku.activeUsers>0&&<ConcurrencyPill count={sku.activeUsers}/>}
                     </div>
                     <div style={{font:"700 14px/1.3 var(--font-display)",color:"#0D0D0E"}}>{sku.name}</div>
                   </div>
