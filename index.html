@@ -564,7 +564,7 @@ function HomeScreen({go,state,setState,live}){
         <div style={{flex:1}}/>
         {DATA.USER.canSubmitOutward&&(
           <button onClick={()=>go("outwardSubmit")} style={{background:"#D11243",border:0,borderRadius:8,padding:"6px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:5,color:"#fff",font:"700 12px/1 var(--font-display)",flexShrink:0}} title="Submit Outward">
-            <ICrown style={{width:14,height:14}}/> Submit
+            Submit
           </button>
         )}
         <button onClick={()=>setShowSummary(true)} className="icon-btn" style={{color:"#62666A"}} title="Summary"><IBarChart/></button>
@@ -576,6 +576,7 @@ function HomeScreen({go,state,setState,live}){
         <div style={{background:"linear-gradient(135deg,#252638 0%,#414153 100%)",color:"#fff",borderRadius:10,padding:"8px 12px"}}>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             <div style={{font:"700 16px/1 var(--font-display)"}}>{overallPct}%<span style={{font:"500 10px/1 var(--font-display)",color:"rgba(255,255,255,.5)",marginLeft:4}}>scanned</span></div>
+            <div style={{flex:1}}/>
             <Badge kind={allDone?"ok":"dark"}>{allDone?"Done":"In Progress"}</Badge>
           </div>
           <div className="progress dark" style={{marginTop:7,height:3}}><div className="ok" style={{width:`${overallPct}%`}}/></div>
@@ -590,8 +591,7 @@ function HomeScreen({go,state,setState,live}){
         <CategoryRail active={cat} onChange={id=>setState({...state,cat:id})} counts={counts}/>
         <div className="body light" style={{padding:"12px",overflowY:"auto",flex:1}}>
           <div style={{font:"700 11px/1 var(--font-display)",color:"#62666A",letterSpacing:".08em",textTransform:"uppercase",marginBottom:10,padding:"0 4px"}}>
-            {skus.length} SKU{skus.length!==1?"s":""}
-            {hub!=="all"?` · ${DATA.HUB_LABEL[hub]}`:""}
+            {hub!=="all"?`${DATA.HUB_LABEL[hub]}`:"All SKUs"}
           </div>
           {skus.length===0&&<div style={{padding:"40px 16px",textAlign:"center",font:"500 13px/1.4 var(--font-display)",color:"#62666A"}}>No SKUs match.</div>}
           {skus.map(sku=>{
