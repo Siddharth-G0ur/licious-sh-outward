@@ -573,20 +573,24 @@ function HomeScreen({go,state,setState,live}){
       </div>
 
       {/* summary card */}
-      <div style={{padding:"12px 16px 0",flexShrink:0,background:"#F8F8F8"}}>
-        <div style={{background:"linear-gradient(135deg,#252638 0%,#414153 100%)",color:"#fff",borderRadius:12,padding:16}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-            <div>
-              <div style={{font:"500 10px/1 var(--font-display)",color:"rgba(255,255,255,.5)",letterSpacing:".08em",textTransform:"uppercase"}}>SH OUTWARD · 14 MAY</div>
-              <div style={{font:"800 24px/1 var(--font-display)",marginTop:6}}>{overallPct}%<span style={{font:"500 12px/1 var(--font-display)",color:"rgba(255,255,255,.5)",marginLeft:6}}>scanned</span></div>
-            </div>
-            <Badge kind={allDone?"ok":"dark"}>{allDone?"All Done":"In Progress"}</Badge>
+      <div style={{padding:"8px 16px 0",flexShrink:0,background:"#F8F8F8"}}>
+        <div style={{background:"linear-gradient(135deg,#252638 0%,#414153 100%)",color:"#fff",borderRadius:10,padding:"10px 12px"}}>
+          {/* top row: label + pct + badge */}
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{font:"500 9px/1 var(--font-display)",color:"rgba(255,255,255,.45)",letterSpacing:".08em",textTransform:"uppercase",flexShrink:0}}>SH OUTWARD · 14 MAY</div>
+            <div style={{flex:1}}/>
+            <div style={{font:"700 18px/1 var(--font-display)"}}>{overallPct}%<span style={{font:"500 11px/1 var(--font-display)",color:"rgba(255,255,255,.5)",marginLeft:4}}>scanned</span></div>
+            <Badge kind={allDone?"ok":"dark"} style={{marginLeft:4}}>{allDone?"Done":"In Progress"}</Badge>
           </div>
-          <div className="progress dark" style={{marginTop:12}}><div className="ok" style={{width:`${overallPct}%`}}/></div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginTop:14,paddingTop:14,borderTop:"1px solid rgba(255,255,255,.10)"}}>
-            {[["SKUs",DATA.SKUS.length],["Hubs",DATA.HUBS.length],["Pending",counts.all]].map(([k,v,c])=>(
-              <div key={k}><div style={{font:"500 9px/1 var(--font-display)",color:"rgba(255,255,255,.45)",letterSpacing:".08em",textTransform:"uppercase"}}>{k}</div>
-              <div style={{font:"700 16px/1 var(--font-display)",marginTop:5,color:k==="Pending"&&v>0?"#FFAA01":"#fff"}}>{v}</div></div>
+          {/* progress bar */}
+          <div className="progress dark" style={{marginTop:8,height:3}}><div className="ok" style={{width:`${overallPct}%`}}/></div>
+          {/* stats row */}
+          <div style={{display:"flex",gap:0,marginTop:8,paddingTop:8,borderTop:"1px solid rgba(255,255,255,.08)"}}>
+            {[["SKUs",DATA.SKUS.length],["Hubs",DATA.HUBS.length],["Pending",counts.all]].map(([k,v])=>(
+              <div key={k} style={{flex:1,display:"flex",alignItems:"baseline",gap:5}}>
+                <span style={{font:"700 13px/1 var(--font-display)",color:k==="Pending"&&v>0?"#FFAA01":"#fff"}}>{v}</span>
+                <span style={{font:"500 9px/1 var(--font-display)",color:"rgba(255,255,255,.4)",letterSpacing:".06em",textTransform:"uppercase"}}>{k}</span>
+              </div>
             ))}
           </div>
         </div>
